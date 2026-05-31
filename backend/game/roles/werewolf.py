@@ -26,6 +26,14 @@ class WerewolfHandler(RoleHandler):
         mv = pd.get("my_votes", {})
         if mv:
             lines.append("你的投票记录：" + "、".join(f"第{d}天投{t}号" for d, t in mv.items()))
+        # 悍跳记忆
+        claimed = pd.get("claimed_role")
+        if claimed == "prophet":
+            lines.append("⚠️ 你已悍跳预言家！你必须维持这个身份。")
+            cc = pd.get("claimed_checks", {})
+            if cc:
+                lines.append("你编造的查验结果：" + "、".join(f"{s}号是{r}" for s, r in cc.items()))
+            lines.append("后续发言和投票必须与你的'预言家'身份一致！")
         return ("\n" + "\n".join(lines)) if lines else ""
 
     def get_night_prompt(self, player_name: str, view: Dict[str, Any], teammate_decision: str = None) -> str:

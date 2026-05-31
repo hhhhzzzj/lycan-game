@@ -384,6 +384,8 @@ class GameEngine:
             state.speech_history.append(speech)
             state.full_history.append(speech)
             spoken_seats.append(seat_id)
+            # 悍跳检测：如果狼人在发言中宣称自己是预言家，记录到 claimed_role
+            self._detect_claim(seat_id, result["action"])
             await self._push_update({
                 "current_speaker": seat_id,
                 "current_thinking": result["thinking"],
@@ -527,6 +529,30 @@ class GameEngine:
             await self.run_day()
             await self._push_update()
         await self._push_update({"phase_info": f"游戏结束! 胜利方: {state.winner}"})
+
+    def _detect_claim(self, seat_id: int, speech_content: str):
+        """检测发言中是否宣称了特殊身份（悍跳检测）。
+        如果狼人宣称自己是预言家并报了查验结果，记录到 claimed_role/claimed_checks。"""
+        player = get_player(self.state, seat_id)
+        if player.role != "werewolf":
+            return  # 只追踪狼人的悍跳
+
+        pd = self.state.private_data.get(seat_id, {})
+        content = speech_content
+
+        # 检测是否宣称预言家身份
+        if ("我是预言家" in content or "预言家" in content) and \
+           ("查验" in content or "查了" in content or "验了" in content):
+            pd["claimed_role"] = "prophet"
+            logger.info(f"[悍跳检测] {seat_id}号狼人悍跳预言家！")
+
+            # 尝试提取编造的查验结果
+            # 匹配模式："查了/验了 X号 是 狼人/好人"
+            import re
+            check_pattern = re.findall(r'(\d+)\s*号[^是]*是\s*(狼人|好人)', content)
+            for seat_str, result in check_pattern:
+                pd.setdefault("claimed_checks", {})[seat_str] = result
+                logger.info(f"[悍跳检测] {seat_id}号编造查验: {seat_str}号是{result}")
 
     def _parse_target(self, text: str, players: List[Player]) -> Optional[int]:
         """从文本中解析目标座位号"""

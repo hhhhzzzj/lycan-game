@@ -79,6 +79,8 @@ def create_game_state(player_configs: List[Dict[str, str]]) -> GameState:
         if p.role == "werewolf":
             pd["teammates"] = [s for s in wolf_seats if s != p.seat_id]
             pd["kill_history"] = {}
+            pd["claimed_role"] = None        # 对外宣称的身份（None=未宣称）
+            pd["claimed_checks"] = {}        # 悍跳预言家时编造的查验结果
         elif p.role == "prophet":
             pd["check_results"] = {}
         elif p.role == "witch":
