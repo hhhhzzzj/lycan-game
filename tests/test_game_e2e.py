@@ -171,28 +171,32 @@ class TestWolfCoordination:
         wolf_seats = sorted([p.seat_id for p in state.players if p.role == "werewolf"])
         witch_seat = [p.seat_id for p in state.players if p.role == "witch"][0]
 
-        # Mock: 两狼都选6号，女巫不用药
+        # 动态选合法刀杀目标（非狼）
+        kill_target = [p.seat_id for p in state.players
+                       if p.role != "werewolf" and p.seat_id != witch_seat][0]
+
+        # Mock: 两狼都选 kill_target，女巫不用药
         async def mock_call(seat_id, prompt):
             if seat_id in wolf_seats:
-                return {"thinking": "刀6号", "action": "我决定刀6号"}
+                return {"thinking": f"刀{kill_target}号", "action": f"我决定刀{kill_target}号"}
             elif seat_id == witch_seat:
                 return {"thinking": "不用药", "action": "我不使用任何药水"}
             else:
-                return {"thinking": "验3号", "action": "我查验3号"}
+                return {"thinking": "验人", "action": f"我查验{kill_target}号"}
         engine._call_ai = mock_call
 
         # 手动跑夜晚
         asyncio.run(engine.run_night())
 
-        # 验证：night_actions 中有一个 kill action，target=6
+        # 验证：night_actions 中有一个 kill action，target=kill_target
         kill_actions = [a for a in state.night_actions if a.action_type == "kill"]
         assert len(kill_actions) == 1
-        assert kill_actions[0].target_seat == 6, f"期望刀6号，实际刀{ kill_actions[0].target_seat}号"
+        assert kill_actions[0].target_seat == kill_target, f"期望刀{kill_target}号，实际刀{ kill_actions[0].target_seat}号"
 
         # 验证死亡结算
         from game.engine import _resolve_night_deaths
         deaths = _resolve_night_deaths(state)
-        assert 6 in deaths, f"期望6号死亡，实际死亡名单: {deaths}"
+        assert kill_target in deaths, f"期望{kill_target}号死亡，实际死亡名单: {deaths}"
 
     def test_wolves_disagree_second_wolf_wins(self):
         """两狼意见不一致 → 以第二个狼（知情者）决定为准"""
@@ -204,16 +208,21 @@ class TestWolfCoordination:
         witch_seat = [p.seat_id for p in state.players if p.role == "witch"][0]
         prophet_seat = [p.seat_id for p in state.players if p.role == "prophet"][0]
 
+        # 动态选两个不同的合法刀杀目标（都非狼）
+        non_wolf = [p.seat_id for p in state.players if p.role != "werewolf"]
+        wolf1_target = non_wolf[0]
+        wolf2_target = non_wolf[1]
+
         async def mock_call(seat_id, prompt):
             if seat_id == wolf_seats[0]:
-                return {"thinking": "刀3号", "action": "我决定刀3号"}
+                return {"thinking": f"刀{wolf1_target}号", "action": f"我决定刀{wolf1_target}号"}
             elif seat_id == wolf_seats[1]:
                 # 狼2 不同意狼1，换个目标
-                return {"thinking": "不，换个目标", "action": "我决定刀6号"}
+                return {"thinking": "不，换个目标", "action": f"我决定刀{wolf2_target}号"}
             elif seat_id == witch_seat:
                 return {"thinking": "不用药", "action": "我不使用任何药水"}
             elif seat_id == prophet_seat:
-                return {"thinking": "验人", "action": "我查验3号"}
+                return {"thinking": "验人", "action": f"我查验{wolf1_target}号"}
             else:
                 return {"thinking": "...", "action": "..."}
         engine._call_ai = mock_call
@@ -222,7 +231,9 @@ class TestWolfCoordination:
 
         kill_actions = [a for a in state.night_actions if a.action_type == "kill"]
         assert len(kill_actions) == 1
-        assert kill_actions[0].target_seat == 6, f"两狼意见不一致时应该听狼2的(6号)，实际刀{ kill_actions[0].target_seat}号"
+        assert kill_actions[0].target_seat == wolf2_target, (
+            f"两狼意见不一致时应该听狼2的({wolf2_target}号)，实际刀{ kill_actions[0].target_seat}号"
+        )
 
     def test_witch_cant_use_both_potions(self):
         """女巫同一晚不能用解药又用毒药（elif 限制）"""
@@ -412,7 +423,7 @@ class TestKillTargetCorrectness:
         ]
 
     def test_kill_6_means_6_dies_not_someone_else(self):
-        """狼人刀6号 → 6号死亡，不会死别人"""
+        """狼人刀一个非狼好人 → 该玩家死亡，不会死别人"""
         import asyncio
         engine = GameEngine(self._make_config(), interactive=False)
         state = engine.state
@@ -420,13 +431,17 @@ class TestKillTargetCorrectness:
         witch_seat = [p.seat_id for p in state.players if p.role == "witch"][0]
         prophet_seat = [p.seat_id for p in state.players if p.role == "prophet"][0]
 
+        # 动态选取合法刀杀目标：非狼且非女巫（女巫不用药，但避免歧义）
+        kill_target = [p.seat_id for p in state.players
+                       if p.role != "werewolf" and p.seat_id != witch_seat][0]
+
         async def mock_call(seat_id, prompt):
             if seat_id in wolf_seats:
-                return {"thinking": "刀6号", "action": "我决定刀6号"}
+                return {"thinking": f"刀{kill_target}号", "action": f"我决定刀{kill_target}号"}
             if seat_id == witch_seat:
                 return {"thinking": "不用药", "action": "我不使用任何药水"}
             if seat_id == prophet_seat:
-                return {"thinking": "验3号", "action": "我查验3号"}
+                return {"thinking": "验人", "action": f"我查验{kill_target}号"}
             return {"thinking": "...", "action": "..."}
         engine._call_ai = mock_call
 
@@ -435,10 +450,11 @@ class TestKillTargetCorrectness:
         from game.engine import _resolve_night_deaths
         deaths = _resolve_night_deaths(state)
 
-        # 只有被刀的6号死，其他人活着
-        assert 6 in deaths, f"刀6号，6号应该在死亡名单里，实际: {deaths}"
-        for s in range(1, 6):
-            assert s not in deaths, f"只刀了6号，{s}号不应该死，实际死亡: {deaths}"
+        # 只有被刀的目标死，其他人活着
+        assert kill_target in deaths, f"刀{kill_target}号，应该在死亡名单里，实际: {deaths}"
+        for s in range(1, 7):
+            if s != kill_target:
+                assert s not in deaths, f"只刀了{kill_target}号，{s}号不应该死，实际死亡: {deaths}"
 
     def test_kill_plus_poison_two_die_correctly(self):
         """刀A + 毒B → A和B都死，不会串"""
@@ -449,13 +465,21 @@ class TestKillTargetCorrectness:
         witch_seat = [p.seat_id for p in state.players if p.role == "witch"][0]
         prophet_seat = [p.seat_id for p in state.players if p.role == "prophet"][0]
 
+        # 动态选取合法目标（不依赖随机角色分配）：
+        # 刀杀目标必须是非狼（否则会被合法性校验拦截）；
+        # 毒杀目标必须存活且非女巫自己，且与刀杀目标不同。
+        non_wolf_non_witch = [p.seat_id for p in state.players
+                              if p.role != "werewolf" and p.seat_id != witch_seat]
+        kill_target = non_wolf_non_witch[0]
+        poison_target = non_wolf_non_witch[1]
+
         async def mock_call(seat_id, prompt):
             if seat_id in wolf_seats:
-                return {"thinking": "刀3号", "action": "我决定刀3号"}
+                return {"thinking": f"刀{kill_target}号", "action": f"我决定刀{kill_target}号"}
             if seat_id == witch_seat:
-                return {"thinking": "毒6号", "action": "我使用毒药毒6号"}
+                return {"thinking": f"毒{poison_target}号", "action": f"我使用毒药毒{poison_target}号"}
             if seat_id == prophet_seat:
-                return {"thinking": "验3号", "action": "我查验3号"}
+                return {"thinking": f"验{kill_target}号", "action": f"我查验{kill_target}号"}
             return {"thinking": "...", "action": "..."}
         engine._call_ai = mock_call
 
@@ -464,12 +488,13 @@ class TestKillTargetCorrectness:
         from game.engine import _resolve_night_deaths
         deaths = _resolve_night_deaths(state)
 
-        # 刀3毒6 → 3和6都死
-        assert 3 in deaths, f"刀了3号，3号应该死，实际: {deaths}"
-        assert 6 in deaths, f"毒了6号，6号应该死，实际: {deaths}"
+        # 刀kill_target毒poison_target → 两者都死
+        assert kill_target in deaths, f"刀了{kill_target}号，应该死，实际: {deaths}"
+        assert poison_target in deaths, f"毒了{poison_target}号，应该死，实际: {deaths}"
         # 其他人不应该死
-        for s in (1, 2, 4, 5):
-            assert s not in deaths, f"只刀3毒6，{s}号不应该死，实际: {deaths}"
+        for s in range(1, 7):
+            if s not in (kill_target, poison_target):
+                assert s not in deaths, f"只刀{kill_target}毒{poison_target}，{s}号不应该死，实际: {deaths}"
 
 
 class TestProphetCheckCorrectness:
