@@ -42,6 +42,8 @@ class VillagerHandler(RoleHandler):
 
 {speak_hint}
 
+{view.get("_strategy_hint", "")}
+
 请发表你的看法。作为村民，你应该：
 - 认真分析每个人的发言，找出逻辑矛盾
 - 跟随可信的预言家站边

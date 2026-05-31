@@ -365,6 +365,9 @@ class GameEngine:
             # 注入发言位置感知
             from game.prompt_context import build_speak_order_hint
             view["_speak_order_hint"] = build_speak_order_hint(alive_order, seat_id, spoken_seats)
+            # 注入策略建议
+            from game.strategy import build_strategy_hint
+            view["_strategy_hint"] = build_strategy_hint(player.role, view)
             prompt = handler.get_day_speech_prompt(player.player_name, view)
             await self._push_update({
                 "current_speaker": seat_id,

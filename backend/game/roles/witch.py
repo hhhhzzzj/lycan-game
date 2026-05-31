@@ -96,6 +96,8 @@ class WitchHandler(RoleHandler):
 
 {speak_hint}
 
+{view.get("_strategy_hint", "")}
+
 请发表你的看法。作为女巫，你知道昨晚谁被刀了（如果你还活着），这是重要信息。
 你可以选择性地透露信息来帮助好人阵营。
 

@@ -72,6 +72,8 @@ class ProphetHandler(RoleHandler):
 
 {speak_hint}
 
+{view.get("_strategy_hint", "")}
+
 请发表你的看法。作为预言家，你可以：
 - 跳身份报出查验结果（如果你有查杀，这是关键信息）
 - 带领好人归票

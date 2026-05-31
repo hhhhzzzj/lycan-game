@@ -76,6 +76,8 @@ class WerewolfHandler(RoleHandler):
 
 {speak_hint}
 
+{view.get("_strategy_hint", "")}
+
 请发表你的看法。你可以：
 - 像好人一样分析局势、质疑可疑发言
 - 适当站边或踩人，引导投票方向
