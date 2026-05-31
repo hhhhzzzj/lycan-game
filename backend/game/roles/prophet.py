@@ -42,6 +42,7 @@ class ProphetHandler(RoleHandler):
 {self._format_players(alive)}
 
 请选择你要查验的玩家（输出座位号 1-6）。
+请在 target_seat 字段填入你的选择。
 """
 
     def get_day_speech_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
@@ -73,7 +74,8 @@ class ProphetHandler(RoleHandler):
 - 带领好人投票
 
 但是如果你的查验结果对你不利，你可以选择暂时不暴露身份。
-请用自然的中文发言。"""
+请用自然的中文发言。发言环节 target_seat 填 null。
+【重要】你的查验记录是铁证，发言时必须与之一致，不能报错。"""
 
     def get_vote_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         alive = [p for p in view["players"] if p["is_alive"]]
@@ -91,7 +93,8 @@ class ProphetHandler(RoleHandler):
 存活玩家：
 {self._format_players(alive)}
 
-请选择你要投票放逐的玩家（输出座位号）。"""
+请选择你要投票放逐的玩家（输出座位号）。不能投自己。
+请在 target_seat 字段填入你的选择。"""
 
     def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:
         day = view.get("day", 1)

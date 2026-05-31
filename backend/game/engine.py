@@ -109,10 +109,17 @@ class GameEngine:
         adapter = self.adapters[seat_id]
         player = get_player(self.state, seat_id)
         system_prompt = f"""你正在玩一局6人狼人杀游戏。你是{player.player_name}，座位号{seat_id}号。
-请根据游戏状态做出决策。输出格式为JSON:
-{{"thinking": "你的思考过程", "action": "你的行动或发言内容"}}
+请根据游戏状态做出决策。
 
-思考过程用中文，行动/发言内容也要用中文。发言要自然，像真人说话一样。"""
+【输出格式要求】必须输出合法JSON（不要加 ```json 标记）:
+{{"thinking": "你的内心思考过程(其他人看不到)", "action": "你的发言或行动描述", "target_seat": 目标座位号}}
+
+规则：
+- thinking: 用中文写你的推理过程（只有你自己能看到，其他玩家看不到）
+- action: 你对外说的话或行动描述，要自然像真人说话
+- target_seat: 如果这一步需要选人（刀人/查验/用药/投票），填目标的座位号(1-6的整数)；如果不需要选人（如发言），填 null
+
+【重要】你必须基于你已知的客观事实做决策，不要编造没发生过的事情。你的记忆信息会在 prompt 中提供给你，请以此为准。"""
         logger.debug(f"[AI输入] {seat_id}号({player.player_name}, {player.role}) 收到的prompt:\n{prompt[:2000]}")
         try:
             response = await adapter.call(system_prompt, prompt)

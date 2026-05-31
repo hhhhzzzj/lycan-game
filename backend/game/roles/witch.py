@@ -66,9 +66,9 @@ class WitchHandler(RoleHandler):
 - 毒药只能用一次
 
 请输出你的选择：
-- "不使用任何药"
-- "用解药救 X 号"
-- "用毒药毒 X 号"
+- "不使用任何药"（target_seat 填 null）
+- "用解药救 X 号"（target_seat 填被救的人的座位号）
+- "用毒药毒 X 号"（target_seat 填要毒的人的座位号）
 """
         return prompt
 
@@ -95,7 +95,7 @@ class WitchHandler(RoleHandler):
 
 请发表你的看法。作为女巫，你拥有强大的技能，但请谨慎使用。如果需要，可以暗示你的身份和你昨晚的行动。
 
-请用自然的中文发言。"""
+请用自然的中文发言。发言环节 target_seat 填 null。"""
 
     def get_vote_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         alive = [p for p in view["players"] if p["is_alive"]]
@@ -110,7 +110,8 @@ class WitchHandler(RoleHandler):
 存活玩家：
 {self._format_players(alive)}
 
-请选择你要投票放逐的玩家（输出座位号）。"""
+请选择你要投票放逐的玩家（输出座位号）。不能投自己。
+请在 target_seat 字段填入你的选择。"""
 
     def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:
         day = view.get("day", 1)

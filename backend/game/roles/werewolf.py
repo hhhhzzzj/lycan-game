@@ -48,6 +48,7 @@ class WerewolfHandler(RoleHandler):
 
 请选择你要杀死的目标（输出座位号 1-6）。
 注意：你只能杀死存活玩家，不能杀自己或队友。
+请在 target_seat 字段填入你的选择。
 """
         return prompt
 
@@ -75,8 +76,8 @@ class WerewolfHandler(RoleHandler):
 - 隐藏自己的身份（如果你需要）
 - 如果想要悍跳预言家，可以说"我是预言家，昨晚查了X号是狼人"
 
-请用自然的中文发言。"""
-
+请用自然的中文发言。发言环节 target_seat 填 null。
+【重要】你是狼人但要伪装成好人。不要透露你知道谁是队友、你昨晚刀了谁等狼人独有信息。"""
     def get_vote_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         alive = [p for p in view["players"] if p["is_alive"]]
         history = view.get("full_history", view.get("speech_history", []))
@@ -91,7 +92,8 @@ class WerewolfHandler(RoleHandler):
 存活玩家：
 {self._format_players(alive)}
 
-请选择你要投票放逐的玩家（输出座位号）。你可以投票给任何存活玩家。"""
+请选择你要投票放逐的玩家（输出座位号）。你可以投票给任何存活玩家（不能投自己）。
+请在 target_seat 字段填入你的选择。"""
 
     def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:
         day = view.get("day", 1)
