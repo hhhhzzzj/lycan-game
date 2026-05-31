@@ -17,6 +17,12 @@ class VillagerHandler(RoleHandler):
             for h in history
         )
 
+    def _format_my_votes(self, view):
+        mv = view.get("private_data", {}).get("my_votes", {})
+        if not mv:
+            return ""
+        return "\n你的投票记录：" + "、".join(f"第{d}天投{t}号" for d, t in mv.items())
+
     def get_day_speech_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         day = view["day"]
         night_summary = view.get("night_summary", "")
@@ -31,7 +37,7 @@ class VillagerHandler(RoleHandler):
 
 当前是第{day}天白天，轮到你发言。
 {night_context}
-{action_context}
+{action_context}{self._format_my_votes(view)}
 之前的发言记录：
 {history_text}
 
@@ -47,6 +53,7 @@ class VillagerHandler(RoleHandler):
         history = view.get("full_history", view.get("speech_history", []))
         history_text = self._format_history(history) if history else ""
         return f"""你是{player_name}，身份是村民。
+{self._format_my_votes(view)}
 
 发言记录：
 {history_text}

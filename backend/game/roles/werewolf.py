@@ -17,6 +17,17 @@ class WerewolfHandler(RoleHandler):
             for h in history
         )
 
+    def _format_memory(self, view):
+        pd = view.get("private_data", {})
+        lines = []
+        kh = pd.get("kill_history", {})
+        if kh:
+            lines.append("你的刀杀记录：" + "、".join(f"第{d}晚刀{t}号" for d, t in kh.items()))
+        mv = pd.get("my_votes", {})
+        if mv:
+            lines.append("你的投票记录：" + "、".join(f"第{d}天投{t}号" for d, t in mv.items()))
+        return ("\n" + "\n".join(lines)) if lines else ""
+
     def get_night_prompt(self, player_name: str, view: Dict[str, Any], teammate_decision: str = None) -> str:
         pd = view["private_data"]
         teammates = pd.get("teammates", [])
@@ -54,7 +65,7 @@ class WerewolfHandler(RoleHandler):
 
 当前是第{day}天白天，轮到你发言。
 {night_context}
-{action_context}
+{action_context}{self._format_memory(view)}
 之前的发言记录：
 {history_text}
 
@@ -75,7 +86,7 @@ class WerewolfHandler(RoleHandler):
 现在是投票环节。请根据今天的发言记录决定投票给谁。
 
 发言记录：
-{history_text}
+{history_text}{self._format_memory(view)}
 
 存活玩家：
 {self._format_players(alive)}

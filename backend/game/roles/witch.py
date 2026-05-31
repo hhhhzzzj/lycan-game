@@ -20,6 +20,18 @@ class WitchHandler(RoleHandler):
             for h in history
         )
 
+    def _format_my_votes(self, view):
+        pd = view.get("private_data", {})
+        lines = []
+        ph = pd.get("potion_history", [])
+        if ph:
+            lines.append("你的用药记录：" + "、".join(
+                f"第{r['day']}晚{'救' if r['type']=='save' else '毒'}{r['target']}号" for r in ph))
+        mv = pd.get("my_votes", {})
+        if mv:
+            lines.append("你的投票记录：" + "、".join(f"第{d}天投{t}号" for d, t in mv.items()))
+        return ("\n" + "\n".join(lines)) if lines else ""
+
     def get_night_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         pd = view["private_data"]
         antidote = pd.get("antidote_remaining", 0)
@@ -75,7 +87,7 @@ class WitchHandler(RoleHandler):
 
 你的药水状态：解药{pd.get('antidote_remaining', 0)}瓶，毒药{pd.get('poison_remaining', 0)}瓶。
 {night_context}
-{action_context}
+{action_context}{self._format_my_votes(view)}
 当前是第{day}天白天，轮到你发言。
 
 之前的发言记录：
@@ -90,6 +102,7 @@ class WitchHandler(RoleHandler):
         history = view.get("full_history", view.get("speech_history", []))
         history_text = self._format_history(history) if history else ""
         return f"""你是{player_name}，身份是女巫。
+{self._format_my_votes(view)}
 
 发言记录：
 {history_text}

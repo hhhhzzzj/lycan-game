@@ -82,3 +82,32 @@ def test_villager_day_prompt():
         view={"day": 1, "speech_history": [], "full_history": []},
     )
     assert "村民" in prompt or "平民" in prompt
+
+
+def test_werewolf_speech_renders_kill_history():
+    handler = WerewolfHandler()
+    prompt = handler.get_day_speech_prompt(
+        player_name="玩家1",
+        view={
+            "day": 2,
+            "private_data": {"teammates": [5], "kill_history": {1: 6}, "my_votes": {1: 3}},
+            "full_history": [],
+            "speech_history": [],
+        },
+    )
+    assert "6号" in prompt   # 刀杀记录被渲染
+
+
+def test_villager_vote_renders_my_votes():
+    handler = VillagerHandler()
+    prompt = handler.get_vote_prompt(
+        player_name="玩家6",
+        view={
+            "day": 2,
+            "private_data": {"my_votes": {1: 3}},
+            "players": [{"seat_id": 1, "player_name": "玩家1", "is_alive": True}],
+            "full_history": [],
+            "speech_history": [],
+        },
+    )
+    assert "3号" in prompt   # 历史投票被渲染

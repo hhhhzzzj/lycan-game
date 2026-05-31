@@ -22,6 +22,12 @@ class ProphetHandler(RoleHandler):
             for h in history
         )
 
+    def _format_my_votes(self, view):
+        mv = view.get("private_data", {}).get("my_votes", {})
+        if not mv:
+            return ""
+        return "\n你的投票记录：" + "、".join(f"第{d}天投{t}号" for d, t in mv.items())
+
     def get_night_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         alive = [p for p in view["players"] if p["is_alive"] and p["seat_id"] != view["my_seat_id"]]
         prev_checks = view["private_data"].get("check_results", {})
@@ -54,7 +60,7 @@ class ProphetHandler(RoleHandler):
 {night_context}
 {action_context}
 你的查验记录：
-{self._format_checks(checks)}
+{self._format_checks(checks)}{self._format_my_votes(view)}
 
 当前是第{day}天白天，轮到你发言。
 
@@ -77,7 +83,7 @@ class ProphetHandler(RoleHandler):
         return f"""你是{player_name}，身份是预言家。
 
 你的查验记录：
-{self._format_checks(checks)}
+{self._format_checks(checks)}{self._format_my_votes(view)}
 
 发言记录：
 {history_text}
