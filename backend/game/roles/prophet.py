@@ -39,15 +39,24 @@ class ProphetHandler(RoleHandler):
 """
 
     def get_day_speech_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+        day = view["day"]
+        night_summary = view.get("night_summary", "")
+        last_action = view.get("private_data", {}).get("last_night_action", "")
         checks = view["private_data"].get("check_results", {})
         history = view.get("full_history", view.get("speech_history", []))
         history_text = self._format_history(history) if history else "（无人发言）"
+
+        night_context = f"夜间事件：{night_summary}" if night_summary else ""
+        action_context = f"你昨晚的行动：{last_action}" if last_action else ""
+
         return f"""你是{player_name}，你的身份是预言家。
 
+{night_context}
+{action_context}
 你的查验记录：
 {self._format_checks(checks)}
 
-当前是第{view['day']}天白天，轮到你发言。
+当前是第{day}天白天，轮到你发言。
 
 之前的发言记录：
 {history_text}
@@ -78,14 +87,24 @@ class ProphetHandler(RoleHandler):
 
 请选择你要投票放逐的玩家（输出座位号）。"""
 
-    def get_last_words_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+    def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:
+        day = view.get("day", 1)
+        death_label = "夜晚被杀" if reason == "night_kill" else "被投票放逐"
         checks = view["private_data"].get("check_results", {})
-        return f"""你是{player_name}，你的身份是预言家。你即将死亡。
-
+        history = view.get("full_history") or view.get("speech_history") or []
+        if day == 1 and not history:
+            context = f"游戏刚刚开始，这是第{day}天，还没有人发过言或投过票。"
+        elif history:
+            context = f"已有发言：\n" + self._format_history(history)
+        else:
+            context = ""
+        return f"""你是{player_name}，你的身份是预言家。你在第{day}天{death_label}。
+{context}
 你的查验记录：
 {self._format_checks(checks)}
 
-请发表遗言。你可以报出所有查验结果，或给出最后的建议。"""
+请发表遗言。你可以报出所有查验结果，或给出最后的建议。
+注意：只说你有依据的内容，不要编造没有发生过的事情。"""
 
 
 _register_role("prophet", ProphetHandler())

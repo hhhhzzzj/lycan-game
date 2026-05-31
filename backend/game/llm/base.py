@@ -14,13 +14,36 @@ class LLMResponse:
 
     @classmethod
     def from_text(cls, text: str) -> "LLMResponse":
+        # 剥离 DeepSeek Reasoner 的 <think>...</think> 标签
+        think_content = ""
+        remaining = text
+        # 先尝试完整的 <think>...</think>
+        think_match = re.search(r'<think>([\s\S]*?)</think>', text)
+        if think_match:
+            think_content = think_match.group(1).strip()
+            remaining = text[:think_match.start()] + text[think_match.end():]
+            remaining = remaining.strip()
+        else:
+            # 处理截断的 <think>（没有关闭标签）
+            truncated = re.search(r'<think>([\s\S]*)', text)
+            if truncated:
+                after_think = truncated.group(1)
+                # 尝试在 JSON 起始处分割
+                json_start = re.search(r'\{["\']thinking["\']', after_think)
+                if json_start:
+                    think_content = after_think[:json_start.start()].strip()
+                    remaining = after_think[json_start.start():].strip()
+                else:
+                    think_content = after_think.strip()
+                    remaining = text[:truncated.start()].strip()
+
         # 尝试提取 JSON
-        json_match = re.search(r'```json\s*([\s\S]*?)\s*```', text)
+        json_match = re.search(r'```json\s*([\s\S]*?)\s*```', remaining)
         if json_match:
             try:
                 data = json.loads(json_match.group(1))
                 return cls(
-                    thinking=data.get("thinking", ""),
+                    thinking=think_content or data.get("thinking", ""),
                     action=data.get("action", ""),
                 )
             except json.JSONDecodeError:
@@ -28,16 +51,16 @@ class LLMResponse:
 
         # 尝试直接解析 JSON
         try:
-            data = json.loads(text)
+            data = json.loads(remaining)
             return cls(
-                thinking=data.get("thinking", ""),
+                thinking=think_content or data.get("thinking", ""),
                 action=data.get("action", ""),
             )
         except json.JSONDecodeError:
             pass
 
-        # 降级：整个文本作为 action
-        return cls(thinking="", action=text.strip())
+        # 降级：剩余文本作为 action（think 内容作为 thinking）
+        return cls(thinking=think_content, action=remaining.strip() if remaining.strip() else text.strip())
 
 
 class BaseLLMAdapter(ABC):

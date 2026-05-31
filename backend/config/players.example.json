@@ -1,0 +1,10 @@
+{
+  "players": [
+    {"seat_id": 1, "player_name": "小明", "model_name": "abab6.5s-chat", "provider": "openai", "api_key": "sk-xxx", "base_url": "https://api.minimax.chat/v1"},
+    {"seat_id": 2, "player_name": "小红", "model_name": "deepseek-chat", "provider": "openai", "api_key": "sk-xxx", "base_url": "https://api.deepseek.com/v1"},
+    {"seat_id": 3, "player_name": "小刚", "model_name": "MiniMax-M1", "provider": "openai", "api_key": "sk-xxx", "base_url": "https://api.minimax.chat/v1"},
+    {"seat_id": 4, "player_name": "小丽", "model_name": "deepseek-reasoner", "provider": "openai", "api_key": "sk-xxx", "base_url": "https://api.deepseek.com/v1"},
+    {"seat_id": 5, "player_name": "小华", "model_name": "abab7-chat", "provider": "openai", "api_key": "sk-xxx", "base_url": "https://api.minimax.chat/v1"},
+    {"seat_id": 6, "player_name": "小强", "model_name": "deepseek-chat", "provider": "openai", "api_key": "sk-xxx", "base_url": "https://api.deepseek.com/v1"}
+  ]
+}

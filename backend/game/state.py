@@ -46,6 +46,7 @@ class GameState:
     votes: Dict[int, Optional[int]] = field(default_factory=dict)
     night_actions: List[NightAction] = field(default_factory=list)
     killed_last_night: List[int] = field(default_factory=list)
+    night_summary: str = ""  # 夜晚结果公告，如"平安夜"或"X号玩家死亡"
     winner: Optional[str] = None
     witch_antidote: int = 1
     witch_poison: int = 1
@@ -121,6 +122,7 @@ def get_player_view(state: GameState, seat_id: int) -> Dict[str, Any]:
             for voter, target in state.votes.items()
         },
         "killed_last_night": list(state.killed_last_night),
+        "night_summary": state.night_summary,
         "private_data": dict(state.private_data.get(seat_id, {})),
     }
 

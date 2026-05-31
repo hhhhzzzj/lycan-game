@@ -32,6 +32,7 @@ export interface PublicGameState {
   night_info?: string;
   phase_info?: string;
   vote_progress?: string;
+  waiting?: boolean;
 }
 
 export type GamePhase =

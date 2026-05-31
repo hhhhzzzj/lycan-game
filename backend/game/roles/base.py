@@ -20,7 +20,7 @@ class RoleHandler(ABC):
     def get_vote_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         return ""
 
-    def get_last_words_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+    def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:
         return ""
 
 

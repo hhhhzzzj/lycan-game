@@ -1,7 +1,9 @@
 # backend/api/routes.py
 """REST API 和 WebSocket 路由"""
 import asyncio
+import json
 import uuid
+from pathlib import Path
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
@@ -13,6 +15,19 @@ from game.state import get_public_state
 router = APIRouter()
 
 _active_games: Dict[str, GameEngine] = {}
+CONFIG_DIR = Path(__file__).parent.parent / "config"
+
+
+def _load_player_configs() -> list[dict]:
+    config_path = CONFIG_DIR / "players.json"
+    if not config_path.exists():
+        raise HTTPException(status_code=500, detail="players.json not found. Copy players.example.json to players.json and fill in your API keys.")
+    with open(config_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    players = data.get("players", [])
+    if len(players) != 6:
+        raise HTTPException(status_code=500, detail=f"players.json must have exactly 6 players, found {len(players)}")
+    return players
 
 
 class PlayerConfig(BaseModel):
@@ -117,6 +132,53 @@ async def get_model_presets():
     }
 
 
+@router.get("/game/config")
+async def get_game_config():
+    players = _load_player_configs()
+    return {
+        "players": [
+            {k: v for k, v in p.items() if k != "api_key"}
+            for p in players
+        ],
+    }
+
+
+class StartGameResponse(BaseModel):
+    game_id: str
+    players: List[Dict[str, Any]]
+
+
+@router.post("/game/start", response_model=StartGameResponse)
+async def start_game():
+    player_configs = _load_player_configs()
+    game_id = str(uuid.uuid4())[:8]
+    engine = GameEngine(player_configs)
+    _active_games[game_id] = engine
+    asyncio.create_task(engine.run_game())
+    return StartGameResponse(
+        game_id=game_id,
+        players=[
+            {
+                "seat_id": p.seat_id,
+                "player_name": p.player_name,
+                "role": p.role,
+                "model_name": p.model_name,
+                "is_alive": p.is_alive,
+            }
+            for p in engine.state.players
+        ],
+    )
+
+
+@router.post("/game/{game_id}/continue")
+async def continue_game(game_id: str):
+    engine = _active_games.get(game_id)
+    if not engine:
+        raise HTTPException(status_code=404, detail="Game not found")
+    engine.signal_continue()
+    return {"status": "ok"}
+
+
 @router.websocket("/game/{game_id}/ws")
 async def game_websocket(websocket: WebSocket, game_id: str):
     engine = _active_games.get(game_id)
@@ -133,7 +195,9 @@ async def game_websocket(websocket: WebSocket, game_id: str):
             pass
 
     engine.set_on_update(push_update)
-    await websocket.send_json(get_public_state(engine.state))
+    initial_state = get_public_state(engine.state)
+    initial_state["waiting"] = engine._interactive
+    await websocket.send_json(initial_state)
 
     try:
         while True:

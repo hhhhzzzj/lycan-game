@@ -1,87 +1,93 @@
-import { useState } from 'react';
-import type { PlayerConfig, ModelPreset } from '../types/game';
+import { useState, useEffect } from 'react';
 
 const API_BASE = 'http://localhost:8000';
 
-interface Props {
-  onGameCreated: (gameId: string) => void;
+interface PlayerDisplay {
+  seat_id: number;
+  player_name: string;
+  model_name: string;
+  provider: string;
+  base_url?: string;
 }
 
-const DEFAULT_PLAYERS: PlayerConfig[] = Array.from({ length: 6 }, (_, i) => ({
-  seat_id: i + 1,
-  player_name: `玩家${i + 1}`,
-  model_name: 'claude-sonnet-4-6-20250514',
-  provider: 'anthropic',
-  api_key: '',
-}));
+interface Props {
+  onGameStarted: (gameId: string) => void;
+}
 
-const MODEL_PRESETS: ModelPreset[] = [
-  { provider: 'anthropic', name: 'Claude Sonnet 4.6', model: 'claude-sonnet-4-6-20250514', description: 'Anthropic Claude' },
-  { provider: 'openai', name: 'GPT-4o', model: 'gpt-4o', description: 'OpenAI GPT-4o' },
-  { provider: 'openai', name: 'GPT-4.1', model: 'gpt-4.1', description: 'OpenAI GPT-4.1' },
-  { provider: 'google', name: 'Gemini 2.5 Pro', model: 'gemini-2.5-pro-exp-03-25', description: 'Google Gemini' },
-];
+const PROVIDER_LABELS: Record<string, string> = {
+  anthropic: 'Claude',
+  openai: 'OpenAI 兼容',
+  google: 'Gemini',
+};
 
-export default function GameSetup({ onGameCreated }: Props) {
-  const [players, setPlayers] = useState<PlayerConfig[]>(DEFAULT_PLAYERS);
-  const [loading, setLoading] = useState(false);
+export default function GameSetup({ onGameStarted }: Props) {
+  const [players, setPlayers] = useState<PlayerDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
 
-  const updatePlayer = (seat: number, field: keyof PlayerConfig, value: string) => {
-    setPlayers((prev) =>
-      prev.map((p) => (p.seat_id === seat ? { ...p, [field]: value } : p))
-    );
-  };
+  useEffect(() => {
+    fetch(`${API_BASE}/game/config`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load config');
+        return res.json();
+      })
+      .then((data) => setPlayers(data.players))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Unknown error'))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleCreateGame = async () => {
-    setLoading(true);
+  const handleStart = async () => {
+    setStarting(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE}/game/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ players }),
-      });
-      if (!res.ok) throw new Error('Failed to create game');
+      const res = await fetch(`${API_BASE}/game/start`, { method: 'POST' });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || 'Failed to start game');
+      }
       const data = await res.json();
-      onGameCreated(data.game_id);
+      onGameStarted(data.game_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
-      setLoading(false);
+      setStarting(false);
     }
   };
 
+  if (loading) {
+    return <div style={{ padding: 24, color: '#fff' }}>加载配置中...</div>;
+  }
+
   return (
-    <div style={{ padding: 24 }}>
-      <h2>AI 狼人杀 - 游戏配置</h2>
+    <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
+      <h2>AI 狼人杀</h2>
+      <p style={{ color: '#888', marginBottom: 24 }}>从 backend/config/players.json 读取玩家配置</p>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
         {players.map((p) => (
-          <div key={p.seat_id} style={{ border: '1px solid #ccc', padding: 12, borderRadius: 8 }}>
-            <h3>{p.seat_id}号 - {p.player_name}</h3>
-            <label>名称: <input value={p.player_name} onChange={(e) => updatePlayer(p.seat_id, 'player_name', e.target.value)} /></label>
-            <br />
-            <label>模型:
-              <select value={p.model_name} onChange={(e) => {
-                const preset = MODEL_PRESETS.find((m) => m.model === e.target.value);
-                if (preset) {
-                  updatePlayer(p.seat_id, 'model_name', preset.model);
-                  updatePlayer(p.seat_id, 'provider', preset.provider);
-                }
-              }}>
-                {MODEL_PRESETS.map((m) => (
-                  <option key={m.model} value={m.model}>{m.name}</option>
-                ))}
-              </select>
-            </label>
-            <br />
-            <label>API Key: <input type="password" value={p.api_key} onChange={(e) => updatePlayer(p.seat_id, 'api_key', e.target.value)} placeholder="sk-..." /></label>
+          <div key={p.seat_id} style={{ border: '1px solid #444', padding: 12, borderRadius: 8, background: '#1a1a2e' }}>
+            <h3 style={{ margin: 0 }}>{p.seat_id}号 - {p.player_name}</h3>
+            <div style={{ marginTop: 4 }}>
+              {PROVIDER_LABELS[p.provider] || p.provider}: {p.model_name}
+            </div>
+            {p.base_url && (
+              <div style={{ fontSize: 12, color: '#888', marginTop: 2, wordBreak: 'break-all' }}>
+                {p.base_url}
+              </div>
+            )}
           </div>
         ))}
       </div>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <button onClick={handleCreateGame} disabled={loading} style={{ marginTop: 24, padding: '12px 32px', fontSize: 16 }}>
-        {loading ? '创建中...' : '创建游戏'}
+
+      {error && <p style={{ color: '#e57373', marginTop: 16 }}>{error}</p>}
+
+      <button
+        onClick={handleStart}
+        disabled={starting || players.length === 0}
+        style={{ marginTop: 24, padding: '12px 32px', fontSize: 16, cursor: 'pointer' }}
+      >
+        {starting ? '启动中...' : '开始游戏'}
       </button>
     </div>
   );

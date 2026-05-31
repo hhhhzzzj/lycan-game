@@ -61,19 +61,27 @@ class WitchHandler(RoleHandler):
         return prompt
 
     def get_day_speech_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+        day = view["day"]
+        night_summary = view.get("night_summary", "")
         pd = view["private_data"]
+        last_action = pd.get("last_night_action", "")
         history = view.get("full_history", view.get("speech_history", []))
         history_text = self._format_history(history) if history else "（无人发言）"
+
+        night_context = f"夜间事件：{night_summary}" if night_summary else ""
+        action_context = f"你昨晚的行动：{last_action}" if last_action else ""
+
         return f"""你是{player_name}，你的身份是女巫。
 
 你的药水状态：解药{pd.get('antidote_remaining', 0)}瓶，毒药{pd.get('poison_remaining', 0)}瓶。
-
-当前是第{view['day']}天白天，轮到你发言。
+{night_context}
+{action_context}
+当前是第{day}天白天，轮到你发言。
 
 之前的发言记录：
 {history_text}
 
-请发表你的看法。作为女巫，你拥有强大的技能，但请谨慎使用。
+请发表你的看法。作为女巫，你拥有强大的技能，但请谨慎使用。如果需要，可以暗示你的身份和你昨晚的行动。
 
 请用自然的中文发言。"""
 
@@ -91,11 +99,22 @@ class WitchHandler(RoleHandler):
 
 请选择你要投票放逐的玩家（输出座位号）。"""
 
-    def get_last_words_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+    def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:
+        day = view.get("day", 1)
+        death_label = "夜晚被杀" if reason == "night_kill" else "被投票放逐"
         pd = view["private_data"]
-        return f"""你是{player_name}，你的身份是女巫。你即将死亡。
+        history = view.get("full_history") or view.get("speech_history") or []
+        if day == 1 and not history:
+            context = f"游戏刚刚开始，这是第{day}天，还没有人发过言或投过票。"
+        elif history:
+            context = f"已有发言：\n" + self._format_history(history)
+        else:
+            context = ""
+        return f"""你是{player_name}，你的身份是女巫。你在第{day}天{death_label}。
+{context}
 你的药水状态：解药{pd.get('antidote_remaining', 0)}瓶，毒药{pd.get('poison_remaining', 0)}瓶。
-请发表遗言。"""
+请发表遗言。
+注意：只说你有依据的内容，不要编造没有发生过的事情。"""
 
 
 _register_role("witch", WitchHandler())

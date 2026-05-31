@@ -52,6 +52,35 @@ def test_openai_adapter_builds_messages():
     assert messages[1]["role"] == "user"
 
 
+def test_llm_response_strips_think_tags():
+    """DeepSeek Reasoner: <think> 标签应被剥离，内容放入 thinking"""
+    resp = LLMResponse.from_text(
+        '<think>我是预言家，想查3号。</think>\n'
+        '{"thinking": "查3号是狼人", "action": "我查验3号"}'
+    )
+    assert resp.action == "我查验3号"
+    assert "我是预言家" in resp.thinking
+
+
+def test_llm_response_strips_truncated_think():
+    """截断的 <think>（无 </think>）也应被剥离"""
+    resp = LLMResponse.from_text(
+        '<think>分析中...\n选择3号\n'
+        '{"thinking": "分析完成", "action": "投3号"}'
+    )
+    assert resp.action == "投3号"
+    assert "分析中" in resp.thinking
+
+
+def test_llm_response_think_with_fallback():
+    """<think> 后面没有 JSON 时，剩余文本作为 action"""
+    resp = LLMResponse.from_text(
+        '<think>我需要思考一下</think>\n我选择投票给5号'
+    )
+    assert resp.action == "我选择投票给5号"
+    assert resp.thinking == "我需要思考一下"
+
+
 def test_anthropic_adapter_builds_messages():
     adapter = AnthropicAdapter("claude-sonnet-4-6", "sk-test")
     messages = adapter._build_messages(

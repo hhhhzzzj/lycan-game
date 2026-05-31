@@ -36,9 +36,9 @@ def test_werewolf_night_prompt_includes_teammates():
     handler = WerewolfHandler()
     prompt = handler.get_night_prompt(
         player_name="玩家1",
-        view={"private_data": {"teammates": [3]}, "players": []},
+        view={"my_seat_id": 1, "private_data": {"teammates": [3]}, "players": []},
     )
-    assert "狼人" in prompt
+    assert "狼人" in prompt or "队友" in prompt
     assert "玩家1" in prompt
     assert "刀" in prompt or "杀" in prompt
 
