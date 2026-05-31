@@ -9,3 +9,10 @@ dist/
 *.log
 .vscode/
 .idea/
+backend/config/players.json
+backend/logs/
+
+# 运行时临时产物 / 本地工具配置
+tmp_status.json
+.claude/
+.pytest_cache/
