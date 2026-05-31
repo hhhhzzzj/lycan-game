@@ -354,12 +354,17 @@ class GameEngine:
         alive = get_alive_players(state)
 
         # === 发言阶段 ===
+        spoken_seats = []
+        alive_order = [s for s in state.speaker_order if get_player(state, s).is_alive]
         for seat_id in state.speaker_order:
             player = get_player(state, seat_id)
             if not player.is_alive:
                 continue
             handler = get_role_handler(player.role)
             view = get_player_view(state, seat_id)
+            # 注入发言位置感知
+            from game.prompt_context import build_speak_order_hint
+            view["_speak_order_hint"] = build_speak_order_hint(alive_order, seat_id, spoken_seats)
             prompt = handler.get_day_speech_prompt(player.player_name, view)
             await self._push_update({
                 "current_speaker": seat_id,
@@ -375,6 +380,7 @@ class GameEngine:
             )
             state.speech_history.append(speech)
             state.full_history.append(speech)
+            spoken_seats.append(seat_id)
             await self._push_update({
                 "current_speaker": seat_id,
                 "current_thinking": result["thinking"],

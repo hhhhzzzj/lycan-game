@@ -46,54 +46,60 @@ class ProphetHandler(RoleHandler):
 """
 
     def get_day_speech_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+        from game.prompt_context import build_game_summary, build_today_transcript
         day = view["day"]
-        night_summary = view.get("night_summary", "")
-        last_action = view.get("private_data", {}).get("last_night_action", "")
-        checks = view["private_data"].get("check_results", {})
-        history = view.get("full_history", view.get("speech_history", []))
-        history_text = self._format_history(history) if history else "（无人发言）"
+        pd = view.get("private_data", {})
+        last_action = pd.get("last_night_action", "")
+        checks = pd.get("check_results", {})
 
-        night_context = f"夜间事件：{night_summary}" if night_summary else ""
+        game_summary = build_game_summary(view)
+        today_speeches = build_today_transcript(
+            view.get("speech_history", []), day, exclude_seat=view.get("my_seat_id"))
+        speak_hint = view.get("_speak_order_hint", "")
         action_context = f"你昨晚的行动：{last_action}" if last_action else ""
 
         return f"""你是{player_name}，你的身份是预言家。
 
-{night_context}
+【局势摘要】
+{game_summary}
 {action_context}
-你的查验记录：
+
+你的查验记录（铁证，必须如实汇报）：
 {self._format_checks(checks)}{self._format_my_votes(view)}
 
-当前是第{day}天白天，轮到你发言。
+【今日发言记录】
+{today_speeches}
 
-之前的发言记录：
-{history_text}
+{speak_hint}
 
 请发表你的看法。作为预言家，你可以：
-- 报出你的查验结果
-- 分析场上局势
-- 带领好人投票
+- 跳身份报出查验结果（如果你有查杀，这是关键信息）
+- 带领好人归票
+- 如果首验是金水（好人验），可以选择暂时潜水
 
-但是如果你的查验结果对你不利，你可以选择暂时不暴露身份。
 请用自然的中文发言。发言环节 target_seat 填 null。
 【重要】你的查验记录是铁证，发言时必须与之一致，不能报错。"""
 
     def get_vote_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
-        alive = [p for p in view["players"] if p["is_alive"]]
+        from game.prompt_context import build_today_transcript, build_alive_players_list
+        day = view["day"]
         checks = view["private_data"].get("check_results", {})
-        history = view.get("full_history", view.get("speech_history", []))
-        history_text = self._format_history(history) if history else ""
-        return f"""你是{player_name}，身份是预言家。
+        today_speeches = build_today_transcript(
+            view.get("speech_history", []), day)
+        alive_list = build_alive_players_list(view["players"], exclude_seat=view.get("my_seat_id"))
+
+        return f"""你是{player_name}，身份是预言家。现在是投票环节。
 
 你的查验记录：
 {self._format_checks(checks)}{self._format_my_votes(view)}
 
-发言记录：
-{history_text}
+【今日发言记录】
+{today_speeches}
 
-存活玩家：
-{self._format_players(alive)}
+【存活玩家（可投票目标）】{alive_list}
 
-请选择你要投票放逐的玩家（输出座位号）。不能投自己。
+请根据你的查验结果和今天的发言，选择投票目标（不能投自己）。
+如果你有查杀记录，优先投被查杀的玩家。
 请在 target_seat 字段填入你的选择。"""
 
     def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:

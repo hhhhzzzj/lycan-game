@@ -24,44 +24,47 @@ class VillagerHandler(RoleHandler):
         return "\n你的投票记录：" + "、".join(f"第{d}天投{t}号" for d, t in mv.items())
 
     def get_day_speech_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+        from game.prompt_context import build_game_summary, build_today_transcript
         day = view["day"]
-        night_summary = view.get("night_summary", "")
-        last_action = view.get("private_data", {}).get("last_night_action", "")
-        history = view.get("full_history", view.get("speech_history", []))
-        history_text = self._format_history(history) if history else "（无人发言）"
-
-        night_context = f"夜间事件：{night_summary}" if night_summary else ""
-        action_context = f"你昨晚的行动：{last_action}" if last_action else ""
+        game_summary = build_game_summary(view)
+        today_speeches = build_today_transcript(
+            view.get("speech_history", []), day, exclude_seat=view.get("my_seat_id"))
+        speak_hint = view.get("_speak_order_hint", "")
 
         return f"""你是{player_name}，你的身份是村民。你没有特殊能力，但你通过分析发言和投票帮助好人获胜。
 
-当前是第{day}天白天，轮到你发言。
-{night_context}
-{action_context}{self._format_my_votes(view)}
-之前的发言记录：
-{history_text}
+【局势摘要】
+{game_summary}
+{self._format_my_votes(view)}
+
+【今日发言记录】
+{today_speeches}
+
+{speak_hint}
 
 请发表你的看法。作为村民，你应该：
-- 认真分析每个人的发言
-- 找出矛盾或可疑之处
-- 帮助预言家等神职队友
+- 认真分析每个人的发言，找出逻辑矛盾
+- 跟随可信的预言家站边
+- 明确表达你的怀疑和支持
 
 请用自然的中文发言。发言环节 target_seat 填 null。"""
 
     def get_vote_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
-        alive = [p for p in view["players"] if p["is_alive"]]
-        history = view.get("full_history", view.get("speech_history", []))
-        history_text = self._format_history(history) if history else ""
-        return f"""你是{player_name}，身份是村民。
+        from game.prompt_context import build_today_transcript, build_alive_players_list
+        day = view["day"]
+        today_speeches = build_today_transcript(
+            view.get("speech_history", []), day)
+        alive_list = build_alive_players_list(view["players"], exclude_seat=view.get("my_seat_id"))
+
+        return f"""你是{player_name}，身份是村民。现在是投票环节。
+
+【今日发言记录】
+{today_speeches}
 {self._format_my_votes(view)}
 
-发言记录：
-{history_text}
+【存活玩家（可投票目标）】{alive_list}
 
-存活玩家：
-{self._format_players(alive)}
-
-请选择你要投票放逐的玩家（输出座位号）。不能投自己。
+请根据今天的发言和分析，选择一个最可疑的玩家投票放逐（不能投自己）。
 请在 target_seat 字段填入你的选择。"""
 
     def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:

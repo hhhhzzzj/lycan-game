@@ -53,46 +53,54 @@ class WerewolfHandler(RoleHandler):
         return prompt
 
     def get_day_speech_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+        from game.prompt_context import build_game_summary, build_today_transcript, build_speak_order_hint
         day = view["day"]
-        night_summary = view.get("night_summary", "")
-        last_action = view.get("private_data", {}).get("last_night_action", "")
-        history = view.get("full_history", view.get("speech_history", []))
-        history_text = self._format_history(history) if history else "（无人发言）"
+        pd = view.get("private_data", {})
+        last_action = pd.get("last_night_action", "")
 
-        night_context = f"夜间事件：{night_summary}" if night_summary else ""
+        game_summary = build_game_summary(view)
+        today_speeches = build_today_transcript(
+            view.get("speech_history", []), day, exclude_seat=view.get("my_seat_id"))
+        speak_hint = view.get("_speak_order_hint", "")
+
         action_context = f"你昨晚的行动：{last_action}" if last_action else ""
 
         return f"""你是{player_name}，你的身份是狼人。
 
-当前是第{day}天白天，轮到你发言。
-{night_context}
+【局势摘要】
+{game_summary}
 {action_context}{self._format_memory(view)}
-之前的发言记录：
-{history_text}
+
+【今日发言记录】
+{today_speeches}
+
+{speak_hint}
 
 请发表你的看法。你可以：
-- 分析场上局势
-- 质疑其他人的发言
-- 隐藏自己的身份（如果你需要）
-- 如果想要悍跳预言家，可以说"我是预言家，昨晚查了X号是狼人"
+- 像好人一样分析局势、质疑可疑发言
+- 适当站边或踩人，引导投票方向
+- 保护你的狼队友（不要让集火对准他们）
 
 请用自然的中文发言。发言环节 target_seat 填 null。
 【重要】你是狼人但要伪装成好人。不要透露你知道谁是队友、你昨晚刀了谁等狼人独有信息。"""
+
     def get_vote_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
-        alive = [p for p in view["players"] if p["is_alive"]]
-        history = view.get("full_history", view.get("speech_history", []))
-        history_text = self._format_history(history) if history else ""
-        return f"""你是{player_name}，身份是狼人。
+        from game.prompt_context import build_today_transcript, build_alive_players_list
+        day = view["day"]
+        today_speeches = build_today_transcript(
+            view.get("speech_history", []), day)
+        alive_list = build_alive_players_list(view["players"], exclude_seat=view.get("my_seat_id"))
 
-现在是投票环节。请根据今天的发言记录决定投票给谁。
+        return f"""你是{player_name}，身份是狼人。现在是投票环节。
 
-发言记录：
-{history_text}{self._format_memory(view)}
+【今日发言记录】
+{today_speeches}
+{self._format_memory(view)}
 
-存活玩家：
-{self._format_players(alive)}
+【存活玩家（可投票目标）】{alive_list}
 
-请选择你要投票放逐的玩家（输出座位号）。你可以投票给任何存活玩家（不能投自己）。
+请根据今天的发言，选择一个玩家投票放逐（不能投自己）。
+策略：优先投对狼人阵营威胁最大的好人（跳身份的预言家、逻辑强的玩家），同时注意不要让投票模式暴露你和队友的关联。
 请在 target_seat 字段填入你的选择。"""
 
     def get_last_words_prompt(self, player_name: str, view: Dict[str, Any], reason: str = "night_kill") -> str:
