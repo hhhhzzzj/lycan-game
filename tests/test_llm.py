@@ -90,3 +90,30 @@ def test_anthropic_adapter_builds_messages():
     assert len(messages) == 1
     assert messages[0]["role"] == "user"
     assert messages[0]["content"] == "What do you do?"
+
+
+def test_llm_response_parses_target_seat():
+    resp = LLMResponse.from_text('{"thinking": "刀5号", "action": "我刀5号", "target_seat": 5}')
+    assert resp.target_seat == 5
+
+
+def test_llm_response_target_seat_absent_is_none():
+    resp = LLMResponse.from_text('{"thinking": "分析", "action": "投票给3号"}')
+    assert resp.target_seat is None
+
+
+def test_llm_response_target_seat_in_code_fence():
+    resp = LLMResponse.from_text(
+        '```json\n{"thinking": "t", "action": "a", "target_seat": 2}\n```'
+    )
+    assert resp.target_seat == 2
+
+
+def test_llm_response_target_seat_out_of_range_is_none():
+    resp = LLMResponse.from_text('{"thinking": "t", "action": "a", "target_seat": 99}')
+    assert resp.target_seat is None
+
+
+def test_llm_response_target_seat_string_coerced():
+    resp = LLMResponse.from_text('{"thinking": "t", "action": "a", "target_seat": "4"}')
+    assert resp.target_seat == 4

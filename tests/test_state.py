@@ -95,3 +95,33 @@ def test_player_seat_ids_are_immutable():
     ])
     for i, p in enumerate(state.players, 1):
         assert p.seat_id == i
+
+
+def test_all_players_have_my_votes_memory():
+    state = create_game_state([
+        {"seat_id": i, "player_name": f"玩家{i}", "model_name": "gpt-4o"}
+        for i in range(1, 7)
+    ])
+    for p in state.players:
+        view = get_player_view(state, p.seat_id)
+        assert view["private_data"]["my_votes"] == {}
+
+
+def test_werewolf_has_kill_history_memory():
+    state = create_game_state([
+        {"seat_id": i, "player_name": f"玩家{i}", "model_name": "gpt-4o"}
+        for i in range(1, 7)
+    ])
+    wolf_seat = [p.seat_id for p in state.players if p.role == "werewolf"][0]
+    view = get_player_view(state, wolf_seat)
+    assert view["private_data"]["kill_history"] == {}
+
+
+def test_witch_has_potion_history_memory():
+    state = create_game_state([
+        {"seat_id": i, "player_name": f"玩家{i}", "model_name": "gpt-4o"}
+        for i in range(1, 7)
+    ])
+    witch_seat = [p.seat_id for p in state.players if p.role == "witch"][0]
+    view = get_player_view(state, witch_seat)
+    assert view["private_data"]["potion_history"] == []

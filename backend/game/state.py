@@ -75,15 +75,17 @@ def create_game_state(player_configs: List[Dict[str, str]]) -> GameState:
     private_data = {}
     wolf_seats = [p.seat_id for p in players if p.role == "werewolf"]
     for p in players:
-        pd: Dict[str, Any] = {}
+        pd: Dict[str, Any] = {"my_votes": {}}   # 通用记忆：所有角色
         if p.role == "werewolf":
             pd["teammates"] = [s for s in wolf_seats if s != p.seat_id]
+            pd["kill_history"] = {}
         elif p.role == "prophet":
             pd["check_results"] = {}
         elif p.role == "witch":
             pd["antidote_remaining"] = 1
             pd["poison_remaining"] = 1
             pd["night_kill_target"] = None
+            pd["potion_history"] = []
         private_data[p.seat_id] = pd
 
     state = GameState(

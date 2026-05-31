@@ -6,11 +6,23 @@ from dataclasses import dataclass
 from typing import Optional
 
 
+def _coerce_seat(value) -> Optional[int]:
+    """把任意值转成合法座位号(1-6)，非法返回 None。"""
+    if value is None:
+        return None
+    try:
+        seat = int(value)
+    except (ValueError, TypeError):
+        return None
+    return seat if 1 <= seat <= 6 else None
+
+
 @dataclass
 class LLMResponse:
     """AI 玩家的响应"""
     thinking: str
     action: str
+    target_seat: Optional[int] = None
 
     @classmethod
     def from_text(cls, text: str) -> "LLMResponse":
@@ -45,6 +57,7 @@ class LLMResponse:
                 return cls(
                     thinking=think_content or data.get("thinking", ""),
                     action=data.get("action", ""),
+                    target_seat=_coerce_seat(data.get("target_seat")),
                 )
             except json.JSONDecodeError:
                 pass
@@ -55,6 +68,7 @@ class LLMResponse:
             return cls(
                 thinking=think_content or data.get("thinking", ""),
                 action=data.get("action", ""),
+                target_seat=_coerce_seat(data.get("target_seat")),
             )
         except json.JSONDecodeError:
             pass
