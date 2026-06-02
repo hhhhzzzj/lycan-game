@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 狼人杀 - 完整效果预览</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Noto+Serif+SC:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --blood: #6b1a1a;
+            --blood-glow: #a83232;
+            --gold: #c9a84c;
+            --gold-dim: #6e5520;
+            --bg-panel: rgba(18, 14, 10, 0.92);
+            --bg-card: rgba(30, 24, 18, 0.9);
+            --border: rgba(201, 168, 76, 0.15);
+            --text-primary: #e8dcc8;
+            --text-muted: #8a7b68;
+            --text-accent: #c9a84c;
+            --font-title: 'Cinzel', serif;
+            --font-body: 'Noto Serif SC', serif;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden
+        }
+
+        body {
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 13px;
+            transition: background 1s
+        }
+
+        /* ===== 昼夜背景 ===== */
+        body.night {
+            background: #07060a
+        }
+
+        body.day {
+            background: #1c1610
+        }
+
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            transition: all 1s
+        }
+
+        /* 夜晚效果 */
+        .night-fx {
+            position: absolute;
+            inset: 0;
+            transition: opacity 1s;
+            opacity: 0
+        }
+
+        body.night .night-fx {
+            opacity: 1
+        }
+
+        .night-moon {
+            position: absolute;
+            top: 5%;
+            right: 10%;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(180, 200, 255, 0.12)0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        .night-fog {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(107, 26, 26, 0.08)0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(40, 40, 80, 0.06)0%, transparent 50%);
+            animation: fogDrift 20s ease-in-out infinite;
+        }
+
+        .night-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse, transparent 20%, rgba(0, 0, 0, 0.8)100%)
+        }
+
+        @keyframes fogDrift {
+
+            0%,
+            100% {
+                transform: translate(0, 0)scale(1)
+            }
+
+            50% {
+                transform: translate(2%, 1%)scale(1.02)
+            }
+        }
+
+        /* 白天效果 */
+        .day-fx {
+            position: absolute;
+            inset: 0;
+            transition: opacity 1s;
+            opacity: 0
+        }
+
+        body.day .day-fx {
+            opacity: 1
+        }
+
+        .day-warm {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 50% 30%, rgba(201, 168, 76, 0.08)0%, transparent 60%),
+                radial-gradient(ellipse at 30% 70%, rgba(180, 140, 60, 0.04)0%, transparent 50%);
+        }
+
+        .day-light {
+            position: absolute;
+            top: 0;
+            left: 20%;
+            width: 60%;
+            height: 40%;
+            background: radial-gradient(ellipse, rgba(255, 240, 200, 0.06)0%, transparent 70%);
+        }
+
+        .day-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse, transparent 40%, rgba(10, 8, 5, 0.5)100%)
+        }
+
+        /* 噪点 */
+        .grain {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+
+<body class="night">
+
+    <div class="bg">
+        <div class="grain"></div>
+        <div class="night-fx">
+            <div class="night-moon"></div>
+            <div class="night-fog"></div>
+            <div class="night-vignette"></div>
+        </div>
+        <div class="day-fx">
+            <div class="day-warm"></div>
+            <div class="day-light"></div>
+            <div class="day-vignette"></div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <!-- 顶栏 -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <span class="logo">☽ AI 狼人杀</span>
+                <span class="phase-badge" id="phaseBadge">第1夜</span>
+            </div>
+            <div class="topbar-center" id="statusText">🐺 狼人正在选择猎物...</div>
+            <div class="topbar-right">
+                <span class="conn-dot"></span>
+                <label class="auto-label"><input type="checkbox" id="autoToggle"> 自动播放</label>
+            </div>
+        </header>
+
+        <main class="main-area">
+            <!-- 左栏：玩家 -->
+            <aside class="left-panel">
+                <div class="panel-title">⚔ 玩家</div>
+                <div id="playerList"></div>
+            </aside>
+
+            <!-- 中间 -->
+            <section class="center-panel">
+                <!-- 当前行动 -->
+                <div class="action-box" id="actionBox">
+                    <div class="action-head" id="actionHead">🐺 1号 暗夜行者 · 狼人行动</div>
+                    <div class="action-body" id="actionBody">
+                        <div class="think-block" id="thinkBlock">
+                            <span class="think-label">💭 内心独白</span>
+                            <p class="think-text" id="thinkText">今晚先杀2号预言家...</p>
+                        </div>
+                        <div class="speech-block" id="speechBlock" style="display:none">
+                            <span class="speech-label">🗣 公开发言</span>
+                            <p class="speech-text" id="speechText"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 对话历史 -->
+                <div class="dialog-scroll" id="dialogScroll"></div>
+
+                <!-- 底部操作 -->
+                <div class="action-bar">
+                    <button class="btn-main" id="btnMain" onclick="nextStep()">继续 →</button>
+                    <button class="btn-skip" id="btnSkip" onclick="skipPhase()">快进 ⏩</button>
+                    <span class="step-info" id="stepInfo">1 / 16</span>
+                </div>
+            </section>
+
+            <!-- 右栏 -->
+            <aside class="right-panel">
+                <div class="panel-title">📜 事件日志</div>
+                <div class="event-list" id="eventList"></div>
+                <div class="panel-title" style="margin-top:14px">🗳 投票</div>
+                <div id="voteArea"><span class="empty-hint">暂无投票</span></div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- 复盘 -->
+    <div class="overlay" id="overlay">
+        <div class="overlay-panel">
+            <h2 class="ov-title">⚔ 战报卷轴</h2>
+            <div id="ovResult"></div>
+            <div id="ovRoles"></div>
+            <div id="ovTimeline"></div>
+            <div class="ov-btns">
+                <button class="btn-main" onclick="location.reload()">重开一局</button>
+                <button class="btn-skip" onclick="document.getElementById('overlay').style.display='none'">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* ===== 布局 ===== */
+        .layout {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column
+        }
+
+        /* 顶栏 */
+        .topbar {
+            height: 46px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .logo {
+            font-family: var(--font-title);
+            font-size: 15px;
+            color: var(--gold);
+            letter-spacing: 2px
+        }
+
+        .phase-badge {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 3px;
+            font-weight: bold;
+            background: var(--blood);
+            color: #eee
+        }
+
+        body.day .phase-badge {
+            background: var(--gold-dim);
+            color: #fff
+        }
+
+        .topbar-center {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 1px
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .conn-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4caf50;
+            box-shadow: 0 0 4px #4caf50
+        }
+
+        .auto-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .auto-label input {
+            accent-color: var(--gold)
+        }
+
+        /* 主体 */
+        .main-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden
+        }
+
+        /* 左栏 */
+        .left-panel {
+            width: 300px;
+            padding: 12px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .p-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            background: var(--bg-card);
+            border: 1px solid transparent;
+            transition: all .3s;
+        }
+
+        .p-card.speaking {
+            border-color: var(--gold-dim);
+            box-shadow: 0 0 14px rgba(201, 168, 76, 0.2);
+            animation: glow 2.5s ease-in-out infinite
+        }
+
+        .p-card.dead {
+            opacity: .35;
+            filter: grayscale(.6)
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 14px rgba(201, 168, 76, 0.2)
+            }
+
+            50% {
+                box-shadow: 0 0 24px rgba(201, 168, 76, 0.4)
+            }
+        }
+
+        .p-seat {
+            width: 26px;
+            height: 26px;
+            line-height: 26px;
+            text-align: center;
+            background: var(--blood);
+            color: #ddd;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0
+        }
+
+        .p-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .p-name {
+            font-size: 13px;
+            font-weight: bold
+        }
+
+        .p-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 1px
+        }
+
+        .p-alive {
+            color: #4caf50;
+            font-size: 11px
+        }
+
+        .p-dead {
+            color: var(--blood-glow);
+            font-size: 13px
+        }
+
+        /* 中间 */
+        .center-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+            overflow: hidden
+        }
+
+        .action-box {
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(107, 26, 26, 0.3);
+            transition: all .5s;
+            background: linear-gradient(135deg, rgba(107, 26, 26, 0.12), rgba(10, 8, 6, 0.9));
+        }
+
+        body.day .action-box {
+            border-color: rgba(201, 168, 76, 0.25);
+            background: linear-gradient(135deg, rgba(201, 168, 76, 0.08), rgba(20, 16, 10, 0.9));
+        }
+
+        .action-head {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px
+        }
+
+        .think-block {
+            margin-bottom: 8px
+        }
+
+        .think-label {
+            font-size: 11px;
+            color: var(--text-muted)
+        }
+
+        .think-text {
+            margin-top: 4px;
+            padding: 10px;
+            font-size: 12px;
+            font-style: italic;
+            color: var(--text-muted);
+            line-height: 1.6;
+            background: rgba(0, 0, 0, .3);
+            border-radius: 4px;
+            border-left: 2px solid var(--blood);
+            max-height: 70px;
+            overflow-y: auto;
+        }
+
+        .speech-block {
+            margin-top: 6px
+        }
+
+        .speech-label {
+            font-size: 11px;
+            color: var(--text-accent)
+        }
+
+        .speech-text {
+            margin-top: 4px;
+            padding: 10px;
+            font-size: 13px;
+            line-height: 1.7;
+            background: rgba(201, 168, 76, 0.05);
+            border-radius: 4px;
+            border-left: 2px solid var(--gold-dim);
+        }
+    </style>
+
+    <style>
+        /* 对话流 */
+        .dialog-scroll {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            padding: 4px 0
+        }
+
+        .msg {
+            padding: 10px 14px;
+            border-radius: 4px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--gold-dim);
+            animation: slideUp .3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .msg-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px
+        }
+
+        .msg-seat {
+            padding: 1px 7px;
+            font-size: 10px;
+            background: var(--blood);
+            color: #ddd;
+            border-radius: 3px;
+            font-weight: bold
+        }
+
+        .msg-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-accent)
+        }
+
+        .msg-model {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-left: auto
+        }
+
+        .msg-content {
+            font-size: 13px;
+            line-height: 1.7
+        }
+
+        .msg details {
+            margin-top: 6px
+        }
+
+        .msg summary {
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 6px;
+            background: rgba(0, 0, 0, .2);
+            border-radius: 3px;
+            display: inline-block
+        }
+
+        .msg .fold-think {
+            margin-top: 4px;
+            padding: 8px;
+            font-size: 11px;
+            font-style: italic;
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, .3);
+            border-radius: 3px;
+            border-left: 2px solid rgba(201, 168, 76, .2)
+        }
+
+        /* 底部操作栏 */
+        .action-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0 0;
+            border-top: 1px solid var(--border);
+            margin-top: 8px;
+        }
+
+        .btn-main {
+            padding: 10px 28px;
+            font-size: 14px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--blood), #8b2020);
+            color: var(--text-primary);
+            border: 1px solid rgba(201, 168, 76, .2);
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all .2s;
+        }
+
+        .btn-main:hover {
+            box-shadow: 0 0 18px rgba(107, 26, 26, .5);
+            transform: translateY(-1px)
+        }
+
+        .btn-main:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none
+        }
+
+        .btn-skip {
+            padding: 8px 16px;
+            font-size: 12px;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--font-body);
+        }
+
+        .btn-skip:hover {
+            border-color: var(--gold);
+            color: var(--text-accent)
+        }
+
+        .step-info {
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--text-muted)
+        }
+
+        /* 右栏 */
+        .right-panel {
+            width: 300px;
+            padding: 12px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+        }
+
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px
+        }
+
+        .ev {
+            padding: 6px 8px;
+            font-size: 11px;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, .3);
+            color: var(--text-muted);
+            border-left: 2px solid transparent;
+            animation: slideUp .3s;
+        }
+
+        .ev.night {
+            border-left-color: var(--blood)
+        }
+
+        .ev.day {
+            border-left-color: var(--gold-dim)
+        }
+
+        .ev.vote {
+            border-left-color: #888
+        }
+
+        .empty-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-style: italic
+        }
+
+        /* 投票 */
+        .vote-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            animation: slideUp .4s
+        }
+
+        .vote-target {
+            font-size: 11px;
+            width: 60px;
+            flex-shrink: 0
+        }
+
+        .vote-bar {
+            flex: 1;
+            height: 16px;
+            background: rgba(0, 0, 0, .4);
+            border-radius: 2px;
+            overflow: hidden
+        }
+
+        .vote-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blood), var(--blood-glow));
+            border-radius: 2px;
+            transition: width .8s
+        }
+
+        .vote-count {
+            font-size: 11px;
+            color: var(--text-accent);
+            width: 30px;
+            text-align: right
+        }
+
+        .vote-tag {
+            font-size: 9px;
+            padding: 1px 5px;
+            background: var(--blood);
+            color: #fff;
+            border-radius: 2px
+        }
+
+        /* 复盘 */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, .88);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay-panel {
+            width: 580px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+            background: linear-gradient(135deg, rgba(30, 24, 18, .98), rgba(15, 12, 8, .98));
+            border: 1px solid var(--gold-dim);
+            border-radius: 8px;
+            animation: popIn .3s ease-out;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(.95);
+                opacity: 0
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1
+            }
+        }
+
+        .ov-title {
+            font-family: var(--font-title);
+            font-size: 22px;
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 20px
+        }
+
+        .ov-result {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px
+        }
+
+        .ov-result.wolf {
+            background: rgba(107, 26, 26, .3);
+            color: var(--blood-glow)
+        }
+
+        .ov-result.good {
+            background: rgba(76, 175, 80, .12);
+            color: #6fcf6f
+        }
+
+        .ov-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 16px
+        }
+
+        .ov-table th {
+            text-align: left;
+            padding: 5px 8px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .ov-table td {
+            padding: 5px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .ov-tl {
+            margin-bottom: 16px
+        }
+
+        .ov-tl-item {
+            padding: 5px 0 5px 14px;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-left: 2px solid var(--border);
+            margin-left: 6px
+        }
+
+        .ov-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(201, 168, 76, .2);
+            border-radius: 2px
+        }
+    </style>
+
+    <script>
+        const players = [
+            { seat: 1, name: '暗夜行者', model: 'Claude 3.5', role: '狼人', alive: true },
+            { seat: 2, name: '月光猎手', model: 'GPT-4o', role: '预言家', alive: true },
+            { seat: 3, name: '毒蘑菇', model: 'Gemini Pro', role: '女巫', alive: true },
+            { seat: 4, name: '无辜村民', model: 'DeepSeek', role: '村民', alive: true },
+            { seat: 5, name: '铁血裁判', model: 'Qwen-72B', role: '村民', alive: true },
+            { seat: 6, name: '黑暗骑士', model: 'Claude Opus', role: '狼人', alive: true },
+        ];
+
+        const roleColor = r => r === '狼人' ? '#e55' : r === '预言家' ? '#6af' : r === '女巫' ? '#c6f' : '#999';
+
+        const steps = [
+            {
+                phase: 'night', day: 1, speaker: 1, status: '🐺 狼人正在密谋...',
+                head: '🐺 1号 暗夜行者 · 狼人密谋', think: '今晚先杀2号预言家。如果他跳身份会很麻烦，趁早除掉。'
+            },
+            {
+                phase: 'night', day: 1, speaker: 6, status: '🐺 狼人正在密谋...',
+                head: '🐺 6号 黑暗骑士 · 狼人密谋', think: '同意杀2号，预言家第一晚不除后患无穷。'
+            },
+            {
+                phase: 'night', day: 1, speaker: 2, status: '👁 预言家正在查验...',
+                head: '👁 2号 月光猎手 · 预言家查验', think: '第一晚查1号。他给我感觉不对，如果是狼明天就跳身份。'
+            },
+            {
+                phase: 'night', day: 1, speaker: 3, status: '🧪 女巫正在行动...',
+                head: '🧪 3号 毒蘑菇 · 女巫救人', think: '2号被刀了，第一晚还是救吧，万一是关键身份。银水用掉。',
+                event: { text: '🌙 第1夜：2号被狼刀，女巫银水救下', cls: 'night' }
+            },
+
+            {
+                phase: 'day', day: 1, speaker: 1, status: '☀ 白天讨论 · 1号发言中',
+                head: '💬 1号 暗夜行者 · 发言',
+                think: '2号没死，应该是女巫救了。我得装无辜，矛头引到别人身上。',
+                speech: '各位早上好。昨晚平安夜，我觉得要注意沉默寡言的人，比如5号一直没什么表态。',
+                event: { text: '☀ 第1天：平安夜，讨论开始', cls: 'day' }
+            },
+            {
+                phase: 'day', day: 1, speaker: 2, status: '☀ 白天讨论 · 2号发言中',
+                head: '💬 2号 月光猎手 · 发言',
+                think: '我查了1号是狼人！今天必须跳身份把他投出去。',
+                speech: '我是预言家。昨晚查验1号，结果是狼人！今天必须投他出去。'
+            },
+            {
+                phase: 'day', day: 1, speaker: 3, status: '☀ 白天讨论 · 3号发言中',
+                head: '💬 3号 毒蘑菇 · 发言',
+                think: '2号跳预言家，我确实救了他，倾向相信他。但不能暴露女巫身份。',
+                speech: '我支持2号的判断。1号从一开始就在引导方向，非常可疑。'
+            },
+            {
+                phase: 'day', day: 1, speaker: 4, status: '☀ 白天讨论 · 4号发言中',
+                head: '💬 4号 无辜村民 · 发言',
+                think: '2号跳预言家查杀1号，逻辑通。但万一是悍跳狼呢？先观察。',
+                speech: '2号说的有道理，但我想听听1号的辩解再做决定。'
+            },
+            {
+                phase: 'day', day: 1, speaker: 5, status: '☀ 白天讨论 · 5号发言中',
+                head: '💬 5号 铁血裁判 · 发言',
+                think: '2号预言家身份看着真。1号第一个发言带节奏，像狼人做派。',
+                speech: '我相信2号。1号第一个发言就带节奏怀疑我，明显是转移视线。投1号。'
+            },
+            {
+                phase: 'day', day: 1, speaker: 6, status: '☀ 白天讨论 · 6号发言中',
+                head: '💬 6号 黑暗骑士 · 发言',
+                think: '队友被查了，得保他。质疑2号是假预言家，搅浑水。',
+                speech: '2号跳得太急了吧？有没有可能是狼人悍跳陷害1号？建议再观察一天。'
+            },
+
+            {
+                phase: 'vote', day: 1, status: '🗳 第1天投票结果',
+                head: '🗳 投票阶段 · 第1天', think: null,
+                votes: { '1号': 4, '2号': 1 }, eliminated: '1号',
+                event: { text: '🗳 1号暗夜行者(4票)被放逐 — 是狼人！', cls: 'vote' }, kill: 1
+            },
+
+            {
+                phase: 'night', day: 2, speaker: 6, status: '🐺 独狼行动中...',
+                head: '🐺 6号 黑暗骑士 · 独狼猎杀',
+                think: '我现在独狼了。必须杀2号预言家，不然他查到我就全完了。',
+                event: { text: '🌙 第2夜：进行中', cls: 'night' }
+            },
+            {
+                phase: 'night', day: 2, speaker: 3, status: '🧪 女巫考虑行动...',
+                head: '🧪 3号 毒蘑菇 · 女巫',
+                think: '银水用了救不了了...2号又被刀。要不要毒6号？他昨天保1号很可疑。先不用，明天投他。',
+                event: { text: '🌙 第2夜：2号月光猎手(预言家)被杀害', cls: 'night' }, kill: 2
+            },
+
+            {
+                phase: 'day', day: 2, speaker: 3, status: '☀ 白天讨论 · 3号发言中',
+                head: '💬 3号 毒蘑菇 · 发言',
+                think: '2号死了，情报源没了。6号昨天保1号太明显，他大概率是同伙。',
+                speech: '2号死了，狼人在针对预言家。6号昨天一直质疑2号保1号，我认为6号就是剩下的狼。',
+                event: { text: '☀ 第2天：2号(预言家)死亡，讨论开始', cls: 'day' }
+            },
+            {
+                phase: 'day', day: 2, speaker: 6, status: '☀ 白天讨论 · 6号发言中',
+                head: '💬 6号 黑暗骑士 · 发言',
+                think: '被怀疑了。得甩锅说3号才可疑，反正死无对证了。',
+                speech: '3号你凭什么这么肯定？昨天你第一个跟风投1号，说不定你才是狼想洗白自己。'
+            },
+
+            {
+                phase: 'vote', day: 2, status: '🗳 第2天投票结果',
+                head: '🗳 投票阶段 · 第2天', think: null,
+                votes: { '6号': 3, '3号': 1 }, eliminated: '6号',
+                event: { text: '🗳 6号黑暗骑士(3票)被放逐 — 是狼人！', cls: 'vote' }, kill: 6
+            },
+
+            { phase: 'over', status: '🏆 游戏结束！好人阵营胜利！', head: '🏆 好人阵营胜利', think: null },
+        ];
+
+        let cur = -1;
+
+        function renderPlayers() {
+            const s = steps[cur] || {};
+            document.getElementById('playerList').innerHTML = players.map(p => {
+                const speaking = s.speaker === p.seat;
+                const cls = 'p-card' + (speaking ? ' speaking' : '') + (p.alive ? '' : ' dead');
+                return `<div class="${cls}">
+      <div class="p-seat">${p.seat}</div>
+      <div class="p-info"><div class="p-name">${p.name}</div><div class="p-meta">${p.model} · <span style="color:${roleColor(p.role)}">${p.role}</span></div></div>
+      <span class="${p.alive ? 'p-alive' : 'p-dead'}">${p.alive ? '●' : '✝'}</span>
+    </div>`;
+            }).join('');
+        }
+
+        function nextStep() {
+            cur++;
+            if (cur >= steps.length) { cur = steps.length - 1; return; }
+            const s = steps[cur];
+
+            // 昼夜
+            document.body.className = (s.phase === 'night') ? 'night' : 'day';
+
+            // badge
+            const badge = document.getElementById('phaseBadge');
+            if (s.phase === 'night') badge.textContent = `第${s.day}夜`;
+            else if (s.phase === 'vote') badge.textContent = `投票`;
+            else if (s.phase === 'over') badge.textContent = `结束`;
+            else badge.textContent = `第${s.day}天`;
+
+            // status
+            document.getElementById('statusText').textContent = s.status;
+
+            // kill
+            if (s.kill) { const p = players.find(x => x.seat === s.kill); if (p) p.alive = false; }
+
+            // action box
+            document.getElementById('actionHead').textContent = s.head;
+            const tb = document.getElementById('thinkBlock');
+            const sb = document.getElementById('speechBlock');
+            if (s.think) { tb.style.display = ''; document.getElementById('thinkText').textContent = s.think; }
+            else { tb.style.display = 'none'; }
+            if (s.speech) { sb.style.display = ''; document.getElementById('speechText').textContent = s.speech; }
+            else { sb.style.display = 'none'; }
+
+            // dialog (day speech)
+            if (s.speech) {
+                const p = players.find(x => x.seat === s.speaker);
+                document.getElementById('dialogScroll').innerHTML += `<div class="msg">
+      <div class="msg-head"><span class="msg-seat">${s.speaker}号</span><span class="msg-name">${p.name}</span><span class="msg-model">${p.model}</span></div>
+      <div class="msg-content">${s.speech}</div>
+      <details><summary>💭 思考</summary><div class="fold-think">${s.think}</div></details>
+    </div>`;
+                const ds = document.getElementById('dialogScroll'); ds.scrollTop = ds.scrollHeight;
+            }
+
+            // votes
+            if (s.votes) {
+                const max = Math.max(...Object.values(s.votes));
+                document.getElementById('voteArea').innerHTML = Object.entries(s.votes).map(([t, c]) => {
+                    const pct = (c / max * 100) + '%';
+                    const elim = t === s.eliminated;
+                    return `<div class="vote-row"><span class="vote-target">${t}</span><div class="vote-bar"><div class="vote-fill" style="width:${pct}"></div></div><span class="vote-count">${c}票</span>${elim ? '<span class="vote-tag">放逐</span>' : ''}</div>`;
+                }).join('');
+            }
+
+            // event
+            if (s.event) {
+                document.getElementById('eventList').innerHTML += `<div class="ev ${s.event.cls}">${s.event.text}</div>`;
+            }
+
+            // game over
+            if (s.phase === 'over') {
+                document.getElementById('btnMain').disabled = true;
+                document.getElementById('btnSkip').style.display = 'none';
+                setTimeout(showOverlay, 600);
+            }
+
+            // progress
+            document.getElementById('stepInfo').textContent = `${cur + 1} / ${steps.length}`;
+            document.getElementById('btnSkip').style.display = (s.phase === 'vote' || s.phase === 'over') ? 'none' : '';
+            renderPlayers();
+        }
+
+        function skipPhase() {
+            const curPhase = steps[cur]?.phase;
+            while (cur < steps.length - 2 && steps[cur + 1].phase === curPhase) nextStep();
+            nextStep();
+        }
+
+        function showOverlay() {
+            const o = document.getElementById('overlay'); o.style.display = 'flex';
+            document.getElementById('ovResult').className = 'ov-result good';
+            document.getElementById('ovResult').textContent = '🏆 好人阵营胜利！狼人已被全部放逐。';
+            document.getElementById('ovRoles').innerHTML = `<table class="ov-table"><tr><th>座位</th><th>玩家</th><th>角色</th><th>模型</th><th>结局</th></tr>${players.map(p => `<tr><td>${p.seat}号</td><td>${p.name}</td><td style="color:${roleColor(p.role)}">${p.role}</td><td>${p.model}</td><td>${p.alive ? '存活' : '死亡'}</td></tr>`).join('')}</table>`;
+            document.getElementById('ovTimeline').innerHTML = `<div class="ov-tl"><div class="ov-tl-item">第1夜：狼人攻击2号，女巫银水救下</div><div class="ov-tl-item">第1天：2号跳预言家查杀1号，放逐1号(4:1)</div><div class="ov-tl-item">第2夜：6号(独狼)杀害2号预言家</div><div class="ov-tl-item">第2天：3号指认6号为狼，放逐6号(3:1)</div><div class="ov-tl-item">狼人全灭，好人阵营胜利</div></div>`;
+        }
+
+        // 自动播放
+        let autoT = null;
+        document.getElementById('autoToggle').addEventListener('change', function () {
+            if (this.checked) { autoT = setInterval(() => { if (cur < steps.length - 1) nextStep(); else { clearInterval(autoT); this.checked = false; } }, 2500); }
+            else clearInterval(autoT);
+        });
+
+        renderPlayers();
+    </script>
+</body>
+
+</html>

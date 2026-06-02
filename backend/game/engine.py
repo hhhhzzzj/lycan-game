@@ -75,6 +75,8 @@ class GameEngine:
         if interactive:
             self._step_event = asyncio.Event()
         self._init_adapters()
+        from .summary_logger import GameSummaryLogger
+        self.summary_logger = GameSummaryLogger()
 
     def _init_adapters(self):
         for cfg in self.player_configs.values():
@@ -140,18 +142,20 @@ class GameEngine:
         state.night_actions = []
         logger.info("=" * 40)
         logger.info(f"第{state.day}天夜晚降临")
+        self.summary_logger.log_night_start(state.day)
         await self._push_update({"phase_info": f"第{state.day}天夜晚降临"})
         await self._wait_step()
-
-        # Reset witch's night_kill_target
-        witch_players = [p for p in state.players if p.role == "witch"]
-        if witch_players:
-            state.private_data[witch_players[0].seat_id]["night_kill_target"] = None
 
         alive = get_alive_players(state)
 
         # === 狼人刀人 ===
         wolf_players = [p for p in alive if p.role == "werewolf"]
+        # 女巫必须存活才参与夜间行动
+        witch_alive = [p for p in alive if p.role == "witch"]
+
+        # Reset witch's night_kill_target (only if alive)
+        if witch_alive:
+            state.private_data[witch_alive[0].seat_id]["night_kill_target"] = None
         wolf_decisions = []
         for i, wolf in enumerate(wolf_players):
             handler = get_role_handler("werewolf")
@@ -170,6 +174,7 @@ class GameEngine:
                 wolf.seat_id, prompt, valid, "刀人")
             wolf_decisions.append({"seat_id": wolf.seat_id, "thinking": thinking,
                                    "action": action, "target": target})
+            self.summary_logger.log_wolf_action(wolf.seat_id, thinking, action, target)
             await self._push_update({
                 "night_info": f"狼人 {wolf.seat_id}号({wolf.player_name}) 决定刀: {action}",
                 "current_thinking": thinking,
@@ -196,11 +201,12 @@ class GameEngine:
                     action_type="kill", actor_seat=actor, target_seat=target,
                 ))
                 logger.info(f"[狼人] 最终刀人目标: {target}号 (由{actor}号决定)")
+                self.summary_logger.log_wolf_final_target(target, actor)
                 # 写入记忆：所有狼记录本晚刀杀目标
                 for wp in wolf_players:
                     state.private_data[wp.seat_id].setdefault("kill_history", {})[state.day] = target
-                if witch_players:
-                    state.private_data[witch_players[0].seat_id]["night_kill_target"] = target
+                if witch_alive:
+                    state.private_data[witch_alive[0].seat_id]["night_kill_target"] = target
                     logger.info(f"[女巫] 通知刀人目标: {target}号")
 
         # === 预言家验人 ===
@@ -219,15 +225,18 @@ class GameEngine:
                 p.seat_id, prompt, valid, "查验")
             result = {"thinking": thinking, "action": action}
             check_detail = ""
+            _prophet_result = None
             if target:
                 target_player = get_player(state, target)
                 result_text = "狼人" if target_player.role == "werewolf" else "好人"
+                _prophet_result = result_text
                 state.private_data[p.seat_id]["check_results"][str(target)] = result_text
                 logger.info(f"[预言家] 查验{target}号 → {result_text}")
                 check_detail = f" → 查验{target}号({target_player.player_name})是{result_text}"
             else:
                 logger.info(f"[预言家] 未解析到有效查验目标，原始输出: {result['action'][:100]}")
                 check_detail = " → 未选择有效目标"
+            self.summary_logger.log_prophet_action(p.seat_id, result["thinking"], target, _prophet_result)
             await self._push_update({
                 "night_info": f"预言家 {p.seat_id}号({p.player_name}) 查验{check_detail}",
                 "current_thinking": result["thinking"],
@@ -236,8 +245,8 @@ class GameEngine:
             await self._wait_step()
 
         # === 女巫用药 ===
-        if witch_players:
-            w = witch_players[0]
+        if witch_alive:
+            w = witch_alive[0]
             pd = state.private_data[w.seat_id]
             kill_target = pd.get("night_kill_target")
             if kill_target is not None or state.witch_poison > 0:
@@ -280,6 +289,9 @@ class GameEngine:
                     logger.info(f"[女巫] 不使用任何药 (解药剩余:{state.witch_antidote}, 毒药剩余:{state.witch_poison})")
                     witch_action_desc = "不使用任何药"
                 logger.info(f"[女巫] 原始决策文本: {action_text[:120]}")
+                self.summary_logger.log_witch_action(
+                    w.seat_id, result["thinking"], kill_target, witch_action_desc
+                )
                 await self._push_update({
                     "night_info": f"女巫 {w.seat_id}号({w.player_name}): {witch_action_desc}",
                     "current_thinking": result["thinking"],
@@ -311,7 +323,8 @@ class GameEngine:
         for action in state.night_actions:
             pd = state.private_data.get(action.actor_seat, {})
             if action.action_type == "save":
-                state.night_summary = f"昨晚狼人刀了{action.target_seat}号，但被女巫救活，无人死亡。"
+                # 女巫救人成功时，公告只说平安夜，不透露被刀目标
+                state.night_summary = f"昨晚是平安夜，无人死亡。"
                 pd["last_night_action"] = f"使用解药救了 {action.target_seat}号"
             elif action.action_type == "poison":
                 pd["last_night_action"] = f"使用毒药毒杀了 {action.target_seat}号"
@@ -334,6 +347,9 @@ class GameEngine:
                         pd["last_night_action"] = "未使用任何药"
 
         logger.info(f"[夜晚公告] {state.night_summary}")
+        self.summary_logger.log_night_result(deaths, state.night_summary)
+        _alive_seats = [p.seat_id for p in get_alive_players(state)]
+        self.summary_logger.log_day_start(state.day, _alive_seats, state.night_summary)
 
         await self._push_update({"phase_info": f"第{state.day}天白天开始 - {state.night_summary}"})
         await self._wait_step()
@@ -386,6 +402,7 @@ class GameEngine:
             spoken_seats.append(seat_id)
             # 悍跳检测：如果狼人在发言中宣称自己是预言家，记录到 claimed_role
             self._detect_claim(seat_id, result["action"])
+            self.summary_logger.log_speech(seat_id, player.role, result["thinking"], result["action"])
             await self._push_update({
                 "current_speaker": seat_id,
                 "current_thinking": result["thinking"],
@@ -399,12 +416,16 @@ class GameEngine:
 
         # 平票 → 重投
         vote_result = _count_votes(state.votes)
+        _first_elim = vote_result["top_candidates"][0] if len(vote_result["top_candidates"]) == 1 else None
+        self.summary_logger.log_vote_result(state.votes, _first_elim, is_revote=False)
+        _had_revote = False
         await self._push_update({"phase_info": f"投票结果: {vote_result['counts']}"})
         await self._wait_step()
         if len(vote_result["top_candidates"]) > 1:
             await self._push_update({"phase_info": "平票！进入重投阶段"})
             await self._wait_step()
             state.phase = "revote"
+            _had_revote = True
             state.votes = {}
             alive = get_alive_players(state)
             for seat_id in state.speaker_order:
@@ -435,6 +456,9 @@ class GameEngine:
         # 结算投票
         state.phase = "day"
         final_result = _count_votes(state.votes)
+        if _had_revote:
+            _revote_elim = final_result["top_candidates"][0] if len(final_result["top_candidates"]) == 1 else None
+            self.summary_logger.log_vote_result(state.votes, _revote_elim, is_revote=True)
         await self._push_update({"phase_info": f"重投结果: {final_result['counts']}"})
         await self._wait_step()
         if len(final_result["top_candidates"]) == 1:
@@ -478,6 +502,9 @@ class GameEngine:
         )
         self.state.speech_history.append(speech)
         self.state.full_history.append(speech)
+        self.summary_logger.log_last_words(
+            seat_id, player.role, result["thinking"], result["action"], reason
+        )
         await self._push_update({
             "current_speaker": seat_id,
             "current_thinking": result["thinking"],
@@ -517,6 +544,13 @@ class GameEngine:
     async def run_game(self):
         state = self.state
         await self._push_update()
+        # 写入上帝视角复盘日志头部
+        _role_map = [
+            {"seat_id": p.seat_id, "player_name": p.player_name,
+             "model_name": p.model_name, "role": p.role}
+            for p in state.players
+        ]
+        self.summary_logger.log_game_start(_role_map)
         # Standard werewolf flow: Night 1 → Day 1 → Night 2 → Day 2 → ...
         while state.phase != "game_over":
             state.day += 1
@@ -528,6 +562,13 @@ class GameEngine:
             # Day phase
             await self.run_day()
             await self._push_update()
+        _players_final = [
+            {"seat_id": p.seat_id, "player_name": p.player_name,
+             "model_name": p.model_name, "role": p.role, "is_alive": p.is_alive}
+            for p in state.players
+        ]
+        self.summary_logger.log_game_end(state.winner or "", state.day, _players_final)
+        self.summary_logger.close()
         await self._push_update({"phase_info": f"游戏结束! 胜利方: {state.winner}"})
 
     def _detect_claim(self, seat_id: int, speech_content: str):

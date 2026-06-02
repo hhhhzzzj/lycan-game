@@ -1,0 +1,65 @@
+@import "tailwindcss";
+@import "./animations.css";
+
+/* ===== CSS Variables / Theme ===== */
+:root {
+    --blood: #6b1a1a;
+    --blood-glow: #a83232;
+    --gold: #c9a84c;
+    --gold-dim: #6e5520;
+    --bg-deep: #0d0a08;
+    --bg-panel: rgba(18, 14, 10, 0.92);
+    --bg-card: rgba(30, 24, 18, 0.9);
+    --border: rgba(201, 168, 76, 0.15);
+    --text-primary: #e8dcc8;
+    --text-muted: #8a7b68;
+    --text-accent: #c9a84c;
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Noto Serif SC', serif;
+}
+
+/* ===== Base ===== */
+html,
+body,
+#root {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    transition: background 0.8s ease;
+}
+
+/* ===== Night Theme ===== */
+body.night {
+    background: #07060a;
+}
+
+/* ===== Day Theme ===== */
+body.day {
+    background: #1c1610;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.2);
+    border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(201, 168, 76, 0.4);
+}

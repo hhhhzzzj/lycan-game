@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 狼人杀 - 视觉风格概念</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Noto+Serif+SC:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --blood: #6b1a1a;
+            --blood-glow: #a83232;
+            --gold: #c9a84c;
+            --gold-dim: #8a7030;
+            --parchment: #2a2218;
+            --parchment-light: #3d3226;
+            --fog: rgba(180, 180, 200, 0.05);
+            --text-primary: #e8dcc8;
+            --text-muted: #9a8b78;
+            --text-accent: #c9a84c;
+            --shadow-blood: 0 0 40px rgba(107, 26, 26, 0.4);
+            --font-title: 'Cinzel', serif;
+            --font-body: 'Noto Serif SC', serif;
+        }
+
+        body {
+            background: #0d0a08;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 背景层 -->
+    <div class="bg-layer">
+        <div class="fog fog-1"></div>
+        <div class="fog fog-2"></div>
+        <div class="moon-glow"></div>
+        <div class="vignette"></div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <header class="header">
+            <h1 class="title">AI 狼人杀</h1>
+            <p class="subtitle">— 诅咒之夜 · 观战模式 —</p>
+        </header>
+
+        <!-- 风格说明 -->
+        <section class="section">
+            <h2 class="section-title">🌙 视觉风格概念</h2>
+            <p class="desc">中世纪哥特 · 诅咒之夜 · 暗黑猎巫</p>
+            <div class="palette">
+                <div class="swatch" style="background:#0d0a08"><span>深渊黑</span></div>
+                <div class="swatch" style="background:#6b1a1a"><span>血色</span></div>
+                <div class="swatch" style="background:#c9a84c"><span>暗金</span></div>
+                <div class="swatch" style="background:#2a2218"><span>羊皮纸</span></div>
+                <div class="swatch" style="background:#3d3226"><span>焦纸</span></div>
+                <div class="swatch" style="background:#e8dcc8"><span>旧字</span></div>
+            </div>
+        </section>
+
+        <!-- 玩家卡片示例 -->
+        <section class="section">
+            <h2 class="section-title">⚔️ 玩家卡片</h2>
+            <div class="player-grid">
+                <div class="player-card alive speaking">
+                    <div class="card-glow"></div>
+                    <div class="seat-badge">1</div>
+                    <div class="player-name">暗夜行者</div>
+                    <div class="player-role wolf">🐺 狼人</div>
+                    <div class="player-model">Claude 3.5</div>
+                    <div class="status-dot alive"></div>
+                </div>
+                <div class="player-card alive">
+                    <div class="seat-badge">2</div>
+                    <div class="player-name">月光猎手</div>
+                    <div class="player-role seer">👁 预言家</div>
+                    <div class="player-model">GPT-4o</div>
+                    <div class="status-dot alive"></div>
+                </div>
+                <div class="player-card alive">
+                    <div class="seat-badge">3</div>
+                    <div class="player-name">毒蘑菇</div>
+                    <div class="player-role witch">🧪 女巫</div>
+                    <div class="player-model">Gemini Pro</div>
+                    <div class="status-dot alive"></div>
+                </div>
+                <div class="player-card dead">
+                    <div class="seat-badge">4</div>
+                    <div class="player-name">无辜村民</div>
+                    <div class="player-role villager">🏠 村民</div>
+                    <div class="player-model">DeepSeek</div>
+                    <div class="status-dot dead"></div>
+                    <div class="death-mark">✝</div>
+                </div>
+                <div class="player-card alive">
+                    <div class="seat-badge">5</div>
+                    <div class="player-name">铁血裁判</div>
+                    <div class="player-role villager">🏠 村民</div>
+                    <div class="player-model">Qwen-72B</div>
+                    <div class="status-dot alive"></div>
+                </div>
+                <div class="player-card alive">
+                    <div class="seat-badge">6</div>
+                    <div class="player-name">黑暗骑士</div>
+                    <div class="player-role wolf">🐺 狼人</div>
+                    <div class="player-model">Claude Opus</div>
+                    <div class="status-dot alive"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 对话气泡示例 -->
+        <section class="section">
+            <h2 class="section-title">💬 发言区域</h2>
+            <div class="chat-area">
+                <div class="chat-bubble">
+                    <div class="bubble-header">
+                        <span class="bubble-seat">1号</span>
+                        <span class="bubble-name">暗夜行者</span>
+                        <span class="bubble-model">Claude 3.5</span>
+                    </div>
+                    <div class="bubble-content">
+                        我觉得3号昨晚的发言很可疑。作为一个声称自己是好人的玩家，
+                        他对昨晚的死者完全没有表态，这不符合好人的逻辑。我建议今天投他。
+                    </div>
+                    <details class="thinking-toggle">
+                        <summary>💭 内心思考</summary>
+                        <div class="thinking-content">
+                            我需要把怀疑引向3号女巫，这样我的同伴6号就安全了。
+                            如果今天能把女巫投出去，晚上我们就可以放心行动了。
+                        </div>
+                    </details>
+                </div>
+                <div class="chat-bubble">
+                    <div class="bubble-header">
+                        <span class="bubble-seat">2号</span>
+                        <span class="bubble-name">月光猎手</span>
+                        <span class="bubble-model">GPT-4o</span>
+                    </div>
+                    <div class="bubble-content">
+                        等一下，我昨晚查验了1号，他是<span class="text-blood">狼人</span>！
+                        大家不要被他的发言带偏了。我建议今天直接投1号出局。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 投票可视化 -->
+        <section class="section">
+            <h2 class="section-title">🗳️ 投票结果</h2>
+            <div class="vote-panel">
+                <div class="vote-row">
+                    <span class="vote-target">1号 暗夜行者</span>
+                    <div class="vote-bar" style="--votes: 4">
+                        <div class="vote-fill"></div>
+                    </div>
+                    <span class="vote-count">4票</span>
+                    <span class="vote-badge eliminated">放逐</span>
+                </div>
+                <div class="vote-row">
+                    <span class="vote-target">3号 毒蘑菇</span>
+                    <div class="vote-bar" style="--votes: 1">
+                        <div class="vote-fill"></div>
+                    </div>
+                    <span class="vote-count">1票</span>
+                </div>
+                <div class="vote-row">
+                    <span class="vote-target">弃票</span>
+                    <div class="vote-bar" style="--votes: 0">
+                        <div class="vote-fill"></div>
+                    </div>
+                    <span class="vote-count">0票</span>
+                </div>
+                <div class="vote-detail">
+                    <span class="voter">2号→1号</span>
+                    <span class="voter">3号→1号</span>
+                    <span class="voter">5号→1号</span>
+                    <span class="voter">6号→3号</span>
+                    <span class="voter">1号→3号... 不对，他被投了</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 夜晚面板 -->
+        <section class="section">
+            <h2 class="section-title">🌑 夜晚行动面板</h2>
+            <div class="night-panel">
+                <div class="night-icon">🐺</div>
+                <div class="night-text">狼人正在行动...</div>
+                <div class="night-thinking">
+                    <p class="thinking-label">AI 思考中</p>
+                    <p class="thinking-text">我选择杀2号预言家。他已经跳了身份，如果让他活到明天又能查一个人，对我们太不利了。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 操作按钮 -->
+        <section class="section">
+            <h2 class="section-title">⚡ 操作区域</h2>
+            <div class="action-area">
+                <button class="btn-primary">继续 → 狼人行动中</button>
+                <button class="btn-secondary">自动播放</button>
+                <div class="speed-control">
+                    <label>播放速度</label>
+                    <input type="range" min="1" max="5" value="3">
+                    <span>3秒/步</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 阶段指示 -->
+        <section class="section">
+            <h2 class="section-title">📍 阶段指示器</h2>
+            <div class="phase-indicator">
+                <div class="phase-item done">第1夜</div>
+                <div class="phase-item done">第1天</div>
+                <div class="phase-item done">投票</div>
+                <div class="phase-item active">第2夜</div>
+                <div class="phase-item">第2天</div>
+                <div class="phase-item">投票</div>
+            </div>
+        </section>
+    </div>
+
+    <style>
+        /* ===== 背景层 ===== */
+        .bg-layer {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: radial-gradient(ellipse at 50% 20%, #1a1008 0%, #0d0a08 70%);
+        }
+
+        .fog {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse, rgba(100, 80, 60, 0.03) 0%, transparent 60%);
+            animation: drift 30s ease-in-out infinite;
+        }
+
+        .fog-1 {
+            top: -50%;
+            left: -50%;
+            animation-delay: 0s;
+        }
+
+        .fog-2 {
+            top: -30%;
+            left: -70%;
+            animation-delay: -15s;
+            opacity: 0.5;
+        }
+
+        @keyframes drift {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            50% {
+                transform: translate(3%, 2%) rotate(1deg);
+            }
+        }
+
+        .moon-glow {
+            position: absolute;
+            top: 5%;
+            right: 15%;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(200, 180, 140, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse-moon 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse-moon {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.9;
+            }
+        }
+
+        .vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+        }
+
+        /* ===== 容器 ===== */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+
+    <style>
+        /* ===== 标题 ===== */
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .title {
+            font-family: var(--font-title);
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(201, 168, 76, 0.3);
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 6px;
+        }
+
+        /* ===== 区块 ===== */
+        .section {
+            margin-bottom: 48px;
+            padding: 24px;
+            background: linear-gradient(135deg, var(--parchment) 0%, rgba(30, 22, 16, 0.8) 100%);
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            border-radius: 4px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .section-title {
+            font-family: var(--font-title);
+            font-size: 1.2rem;
+            color: var(--gold);
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+            padding-bottom: 8px;
+        }
+
+        .desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        /* ===== 色板 ===== */
+        .palette {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .swatch {
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .swatch span {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+    </style>
+
+    <style>
+        /* ===== 玩家卡片 ===== */
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .player-card {
+            position: relative;
+            padding: 16px;
+            text-align: center;
+            background: linear-gradient(145deg, var(--parchment-light), var(--parchment));
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .player-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        .player-card.speaking {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(201, 168, 76, 0.3), inset 0 0 15px rgba(201, 168, 76, 0.05);
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(201, 168, 76, 0.3), inset 0 0 15px rgba(201, 168, 76, 0.05);
+            }
+
+            50% {
+                box-shadow: 0 0 35px rgba(201, 168, 76, 0.5), inset 0 0 20px rgba(201, 168, 76, 0.08);
+            }
+        }
+
+        .player-card.dead {
+            opacity: 0.5;
+            filter: grayscale(0.6);
+            border-color: rgba(100, 100, 100, 0.3);
+        }
+
+        .card-glow {
+            position: absolute;
+            inset: -2px;
+            border-radius: 6px;
+            background: linear-gradient(45deg, var(--gold), var(--blood-glow), var(--gold));
+            z-index: -1;
+            opacity: 0;
+            animation: glow-rotate 3s linear infinite;
+        }
+
+        .speaking .card-glow {
+            opacity: 0.6;
+        }
+
+        @keyframes glow-rotate {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        .seat-badge {
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            background: var(--blood);
+            color: var(--text-primary);
+            border-radius: 50%;
+            margin: 0 auto 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .player-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .player-role {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .player-role.wolf {
+            color: #e55;
+        }
+
+        .player-role.seer {
+            color: #6af;
+        }
+
+        .player-role.witch {
+            color: #c6f;
+        }
+
+        .player-role.villager {
+            color: var(--text-muted);
+        }
+
+        .player-model {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin: 6px auto 0;
+            display: block;
+        }
+
+        .status-dot.alive {
+            background: #4caf50;
+            box-shadow: 0 0 6px #4caf50;
+        }
+
+        .status-dot.dead {
+            background: #666;
+        }
+
+        .death-mark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: rgba(107, 26, 26, 0.4);
+            pointer-events: none;
+        }
+    </style>
+
+    <style>
+        /* ===== 对话气泡 ===== */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chat-bubble {
+            padding: 16px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(42, 34, 24, 0.9), rgba(30, 24, 16, 0.95));
+            border: 1px solid rgba(201, 168, 76, 0.15);
+            border-left: 3px solid var(--gold-dim);
+        }
+
+        .bubble-header {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .bubble-seat {
+            background: var(--blood);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .bubble-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .bubble-model {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .bubble-content {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+
+        .text-blood {
+            color: var(--blood-glow);
+            font-weight: bold;
+        }
+
+        .thinking-toggle {
+            margin-top: 12px;
+        }
+
+        .thinking-toggle summary {
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .thinking-content {
+            margin-top: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-style: italic;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 3px;
+            border-left: 2px solid rgba(201, 168, 76, 0.3);
+        }
+
+        /* ===== 投票面板 ===== */
+        .vote-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .vote-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .vote-target {
+            width: 140px;
+            font-size: 13px;
+        }
+
+        .vote-bar {
+            flex: 1;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .vote-fill {
+            height: 100%;
+            width: calc(var(--votes) * 20%);
+            background: linear-gradient(90deg, var(--blood), var(--blood-glow));
+            border-radius: 3px;
+            transition: width 0.5s;
+        }
+
+        .vote-count {
+            font-size: 13px;
+            color: var(--text-accent);
+            width: 40px;
+        }
+
+        .vote-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+
+        .vote-badge.eliminated {
+            background: var(--blood);
+            color: #fff;
+        }
+
+        .vote-detail {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(201, 168, 76, 0.1);
+        }
+
+        .voter {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 2px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+
+    <style>
+        /* ===== 夜晚面板 ===== */
+        .night-panel {
+            text-align: center;
+            padding: 32px;
+            background: radial-gradient(ellipse at center, rgba(107, 26, 26, 0.1) 0%, transparent 70%);
+            border: 1px solid rgba(107, 26, 26, 0.3);
+            border-radius: 4px;
+        }
+
+        .night-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            animation: pulse-moon 2s infinite;
+        }
+
+        .night-text {
+            font-size: 16px;
+            color: var(--blood-glow);
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .night-thinking {
+            text-align: left;
+        }
+
+        .thinking-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .thinking-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 3px;
+            border-left: 2px solid var(--blood);
+        }
+
+        /* ===== 操作按钮 ===== */
+        .action-area {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            padding: 12px 32px;
+            font-size: 15px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--blood), #8b2020);
+            color: var(--text-primary);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-body);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #8b2020, var(--blood));
+            box-shadow: 0 0 20px rgba(107, 26, 26, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            padding: 10px 24px;
+            font-size: 14px;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--font-body);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--gold);
+            color: var(--text-primary);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .speed-control input[type="range"] {
+            width: 80px;
+            accent-color: var(--gold);
+        }
+
+        /* ===== 阶段指示器 ===== */
+        .phase-indicator {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .phase-item {
+            padding: 6px 14px;
+            font-size: 12px;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-muted);
+            border: 1px solid rgba(100, 100, 100, 0.2);
+        }
+
+        .phase-item.done {
+            border-color: rgba(201, 168, 76, 0.3);
+            color: var(--text-accent);
+        }
+
+        .phase-item.active {
+            background: var(--blood);
+            border-color: var(--blood-glow);
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(107, 26, 26, 0.5);
+        }
+    </style>
+
+</body>
+
+</html>

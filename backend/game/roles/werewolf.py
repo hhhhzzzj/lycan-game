@@ -20,6 +20,19 @@ class WerewolfHandler(RoleHandler):
     def _format_memory(self, view):
         pd = view.get("private_data", {})
         lines = []
+        # 狼人队友信息（标注存活状态）
+        teammates = pd.get("teammates", [])
+        if teammates:
+            all_players = view.get("players", [])
+            tm_strs = []
+            for t in teammates:
+                p_info = next((p for p in all_players if p["seat_id"] == t), None)
+                if p_info:
+                    status = "" if p_info["is_alive"] else "（已死亡）"
+                    tm_strs.append(f"{t}号{p_info['player_name']}{status}")
+                else:
+                    tm_strs.append(f"{t}号玩家")
+            lines.append("你的狼人队友：" + "、".join(tm_strs))
         kh = pd.get("kill_history", {})
         if kh:
             lines.append("你的刀杀记录：" + "、".join(f"第{d}晚刀{t}号" for d, t in kh.items()))
@@ -40,15 +53,25 @@ class WerewolfHandler(RoleHandler):
         pd = view["private_data"]
         teammates = pd.get("teammates", [])
         my_seat = view["my_seat_id"]
-        alive = [p for p in view["players"] if p["is_alive"]
+        all_players = view.get("players", [])
+        alive = [p for p in all_players if p["is_alive"]
                  and p["seat_id"] not in teammates
                  and p["seat_id"] != my_seat]
+        # 队友信息（标注存活状态）
+        tm_strs = []
+        for t in teammates:
+            p_info = next((p for p in all_players if p["seat_id"] == t), None)
+            if p_info:
+                status = "" if p_info["is_alive"] else "（已死亡）"
+                tm_strs.append(f"{t}号{p_info['player_name']}{status}")
+            else:
+                tm_strs.append(f"{t}号玩家")
         coord_text = ""
         if teammate_decision:
             coord_text = f"\n你的队友已经决定刀: {teammate_decision}。你可以选择跟刀同一目标，或提出不同意见。\n"
         prompt = f"""你是{player_name}，你的身份是狼人。
 
-你的狼人队友：{', '.join(f'{t}号玩家' for t in teammates)}。
+你的狼人队友：{'、'.join(tm_strs)}。
 
 现在是夜晚，你需要和队友一起选择今晚要杀死的目标。{coord_text}
 当前存活玩家（排除队友及自己）：

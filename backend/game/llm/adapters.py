@@ -15,22 +15,30 @@ class OpenAIAdapter(BaseLLMAdapter):
             base_url=self.base_url,
         )
 
-        try:
-            response = await asyncio.wait_for(
-                client.chat.completions.create(
-                    model=self.model,
-                    messages=self._build_messages(system_prompt, user_prompt),
-                    temperature=0.9,
-                    max_tokens=1024,
-                ),
-                timeout=60.0,
-            )
-            text = response.choices[0].message.content or ""
-            return LLMResponse.from_text(text)
-        except asyncio.TimeoutError:
-            return LLMResponse(thinking="API 超时", action="弃票")
-        except Exception as e:
-            return LLMResponse(thinking=f"API 错误: {e}", action="弃票")
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=self.model,
+                        messages=self._build_messages(system_prompt, user_prompt),
+                        temperature=0.9,
+                        max_tokens=1024,
+                    ),
+                    timeout=60.0,
+                )
+                text = response.choices[0].message.content or ""
+                return LLMResponse.from_text(text)
+            except asyncio.TimeoutError:
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(2 ** attempt)
+                    continue
+                return LLMResponse(thinking=f"API 超时（重试{max_retries}次后失败）", action="弃票")
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(2 ** attempt)
+                    continue
+                return LLMResponse(thinking=f"API 错误（重试{max_retries}次后失败）: {e}", action="弃票")
 
     def _build_messages(self, system: str, user: str) -> list:
         return [

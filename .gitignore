@@ -7,12 +7,15 @@ node_modules/
 dist/
 .env.local
 *.log
+logs/
 .vscode/
 .idea/
+frontend/test-results/
 backend/config/players.json
 backend/logs/
 
 # 运行时临时产物 / 本地工具配置
 tmp_status.json
 .claude/
+.qoder/
 .pytest_cache/

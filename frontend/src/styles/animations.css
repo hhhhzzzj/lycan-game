@@ -1,0 +1,84 @@
+/* ===== Custom Keyframes ===== */
+
+@keyframes breathe {
+
+    0%,
+    100% {
+        box-shadow: 0 0 14px rgba(201, 168, 76, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 24px rgba(201, 168, 76, 0.4);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fogDrift {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(2%, 1%) scale(1.02);
+    }
+}
+
+@keyframes floatSlow {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.9;
+        transform: scale(1.05);
+    }
+}
+
+/* ===== Utility Classes ===== */
+.animate-breathe {
+    animation: breathe 2.5s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.animate-fog {
+    animation: fogDrift 20s ease-in-out infinite;
+}
+
+.animate-float {
+    animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+    animation: pulseGlow 4s ease-in-out infinite;
+}

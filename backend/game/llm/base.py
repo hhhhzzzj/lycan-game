@@ -27,17 +27,18 @@ class LLMResponse:
     @classmethod
     def from_text(cls, text: str) -> "LLMResponse":
         # 剥离 DeepSeek Reasoner 的 <think>...</think> 标签
+        # 同时处理 MiniMax 的 <thinking>...</thinking> 标签
         think_content = ""
         remaining = text
-        # 先尝试完整的 <think>...</think>
-        think_match = re.search(r'<think>([\s\S]*?)</think>', text)
+        # 先尝试完整的 <think>...</think> 或 <thinking>...</thinking>
+        think_match = re.search(r'<think(?:ing)?>([\s\S]*?)</think(?:ing)?>', text)
         if think_match:
             think_content = think_match.group(1).strip()
             remaining = text[:think_match.start()] + text[think_match.end():]
             remaining = remaining.strip()
         else:
-            # 处理截断的 <think>（没有关闭标签）
-            truncated = re.search(r'<think>([\s\S]*)', text)
+            # 处理截断的 <think> 或 <thinking>（没有关闭标签）
+            truncated = re.search(r'<think(?:ing)?>([\s\S]*)', text)
             if truncated:
                 after_think = truncated.group(1)
                 # 尝试在 JSON 起始处分割
@@ -74,6 +75,20 @@ class LLMResponse:
             pass
 
         # 降级：剩余文本作为 action（think 内容作为 thinking）
+        # 如果 remaining 看起来像截断的 JSON（以 { 开头，含 thinking/action 字段），尝试正则提取
+        if remaining.startswith('{') and '"action"' in remaining:
+            action_match = re.search(r'"action"\s*:\s*"((?:[^"\\]|\\.)*)"', remaining)
+            thinking_match = re.search(r'"thinking"\s*:\s*"((?:[^"\\]|\\.)*)"', remaining)
+            if action_match:
+                extracted_action = action_match.group(1).replace('\\n', '\n').replace('\\"', '"')
+                extracted_thinking = ""
+                if thinking_match:
+                    extracted_thinking = thinking_match.group(1).replace('\\n', '\n').replace('\\"', '"')
+                return cls(
+                    thinking=think_content or extracted_thinking,
+                    action=extracted_action,
+                    target_seat=_coerce_seat(re.search(r'"target_seat"\s*:\s*(\d+)', remaining).group(1)) if re.search(r'"target_seat"\s*:\s*(\d+)', remaining) else None,
+                )
         return cls(thinking=think_content, action=remaining.strip() if remaining.strip() else text.strip())
 
 
