@@ -12,7 +12,8 @@ logs/
 .idea/
 frontend/test-results/
 backend/config/players.json
-backend/logs/
+backend/logs/*
+!backend/logs/summary/
 
 # 运行时临时产物 / 本地工具配置
 tmp_status.json
