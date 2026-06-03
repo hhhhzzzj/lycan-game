@@ -259,32 +259,70 @@ class GameEngine:
                 }, waiting=False)
                 result = await self._call_ai(w.seat_id, prompt)
                 action_text = result["action"]
+                thinking_text = result.get("thinking", "")
+                target_seat = result.get("target_seat")
                 witch_action_desc = ""
-                if "救" in action_text and state.witch_antidote > 0:
-                    target = self._parse_target(action_text, state.players)
-                    if target:
+
+                # 用 target_seat + action_text 综合判断意图
+                wants_save = "救" in action_text or "解药" in action_text
+                wants_poison = "毒" in action_text or "毒药" in action_text
+                wants_nothing = "不使用" in action_text or ("不" in action_text and "药" in action_text)
+
+                # 矛盾检测：thinking 说不用但 action 说用（或反过来）
+                thinking_wants_nothing = "不使用" in thinking_text or "不用" in thinking_text or "不救" in thinking_text
+                thinking_wants_save = ("救" in thinking_text or "解药" in thinking_text) and not thinking_wants_nothing
+                thinking_wants_poison = "毒" in thinking_text and "不毒" not in thinking_text and not thinking_wants_nothing
+                
+                contradiction = False
+                if wants_nothing and (thinking_wants_save or thinking_wants_poison) and target_seat is not None:
+                    contradiction = True
+                elif (wants_save or wants_poison) and thinking_wants_nothing and target_seat is None:
+                    contradiction = True
+
+                if contradiction:
+                    logger.warning(f"[女巫] thinking/action 矛盾检测! thinking={thinking_text[:80]} action={action_text[:80]} target_seat={target_seat}")
+                    # 重试一次，加强提示一致性
+                    retry_prompt = prompt + "\n\n【系统提示】你上一次的回复中，thinking 和 action 存在矛盾。请确保你最终决定只在 action 和 target_seat 中体现，且必须一致。"
+                    result = await self._call_ai(w.seat_id, retry_prompt)
+                    action_text = result["action"]
+                    thinking_text = result.get("thinking", "")
+                    target_seat = result.get("target_seat")
+                    wants_save = "救" in action_text or "解药" in action_text
+                    wants_poison = "毒" in action_text or "毒药" in action_text
+                    wants_nothing = "不使用" in action_text or ("不" in action_text and "药" in action_text)
+                    logger.info(f"[女巫] 重试后: action={action_text[:80]} target_seat={target_seat}")
+
+                # 决策逻辑：target_seat 为主信号，action_text 为辅助
+                if wants_save and state.witch_antidote > 0:
+                    # 解药：优先用 kill_target（被刀目标），其次用 target_seat，最后正则解析
+                    if kill_target is not None:
+                        save_target = target_seat if target_seat == kill_target else kill_target
+                    else:
+                        save_target = target_seat if target_seat else self._parse_target(action_text, state.players)
+                    if save_target:
                         state.night_actions.append(NightAction(
-                            action_type="save", actor_seat=w.seat_id, target_seat=target,
+                            action_type="save", actor_seat=w.seat_id, target_seat=save_target,
                         ))
                         state.witch_antidote = 0
                         state.private_data[w.seat_id]["antidote_remaining"] = 0
                         state.private_data[w.seat_id].setdefault("potion_history", []).append(
-                            {"day": state.day, "type": "save", "target": target})
-                        logger.info(f"[女巫] 使用解药救{target}号 (毒药剩余:{state.witch_poison})")
-                        witch_action_desc = f"使用解药救 {target}号"
-                if not witch_action_desc and "毒" in action_text and state.witch_poison > 0:
+                            {"day": state.day, "type": "save", "target": save_target})
+                        logger.info(f"[女巫] 使用解药救{save_target}号 (毒药剩余:{state.witch_poison})")
+                        witch_action_desc = f"使用解药救 {save_target}号"
+                elif wants_poison and not wants_save and state.witch_poison > 0:
                     valid = {q.seat_id for q in alive if q.seat_id != w.seat_id}
-                    target = self._extract_valid_target(result, valid)
-                    if target:
+                    # 优先使用 target_seat，合法则采纳
+                    poison_target = target_seat if target_seat in valid else self._extract_valid_target(result, valid)
+                    if poison_target:
                         state.night_actions.append(NightAction(
-                            action_type="poison", actor_seat=w.seat_id, target_seat=target,
+                            action_type="poison", actor_seat=w.seat_id, target_seat=poison_target,
                         ))
                         state.witch_poison = 0
                         state.private_data[w.seat_id]["poison_remaining"] = 0
                         state.private_data[w.seat_id].setdefault("potion_history", []).append(
-                            {"day": state.day, "type": "poison", "target": target})
-                        logger.info(f"[女巫] 使用毒药毒{target}号 (解药剩余:{state.witch_antidote})")
-                        witch_action_desc = f"使用毒药毒 {target}号"
+                            {"day": state.day, "type": "poison", "target": poison_target})
+                        logger.info(f"[女巫] 使用毒药毒{poison_target}号 (解药剩余:{state.witch_antidote})")
+                        witch_action_desc = f"使用毒药毒 {poison_target}号"
                 if not witch_action_desc:
                     logger.info(f"[女巫] 不使用任何药 (解药剩余:{state.witch_antidote}, 毒药剩余:{state.witch_poison})")
                     witch_action_desc = "不使用任何药"
@@ -310,6 +348,7 @@ class GameEngine:
             player = get_player(state, seat_id)
             logger.info(f"[死亡结算] {seat_id}号 {player.player_name} ({player.role}) 死亡")
             player.is_alive = False
+            state.death_log.append({"seat_id": seat_id, "day": state.day, "reason": "night_kill"})
         state.killed_last_night = deaths
 
         # 生成夜晚公告
@@ -465,6 +504,7 @@ class GameEngine:
             eliminated = final_result["top_candidates"][0]
             player = get_player(state, eliminated)
             player.is_alive = False
+            state.death_log.append({"seat_id": eliminated, "day": state.day, "reason": "vote_eliminated"})
             await self._push_update({
                 "phase_info": f"{player.player_name}({eliminated}号) 被放逐！",
             })
@@ -487,6 +527,19 @@ class GameEngine:
         player = get_player(self.state, seat_id)
         handler = get_role_handler(player.role)
         view = get_player_view(self.state, seat_id)
+        # 被投票放逐时注入完整投票明细，让AI知道谁投了自己
+        if reason == "vote_eliminated" and self.state.votes:
+            vote_detail = "、".join(
+                f"{v}号→{t}号" for v, t in self.state.votes.items() if t is not None
+            )
+            vote_counts = _count_votes(self.state.votes)["counts"]
+            counts_str = "、".join(
+                f"{s}号{c}票" for s, c in sorted(vote_counts.items(), key=lambda x: -x[1])
+            )
+            view["_last_vote_text"] = (
+                f"刚刚的投票明细：{vote_detail}。"
+                f"票数统计：{counts_str}。你以最高票数被放逐。"
+            )
         prompt = handler.get_last_words_prompt(player.player_name, view, reason)
         await self._push_update({
             "current_speaker": seat_id,

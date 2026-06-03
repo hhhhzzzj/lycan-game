@@ -53,6 +53,7 @@ class WerewolfHandler(RoleHandler):
         pd = view["private_data"]
         teammates = pd.get("teammates", [])
         my_seat = view["my_seat_id"]
+        day = view.get("day", 1)
         all_players = view.get("players", [])
         alive = [p for p in all_players if p["is_alive"]
                  and p["seat_id"] not in teammates
@@ -69,10 +70,31 @@ class WerewolfHandler(RoleHandler):
         coord_text = ""
         if teammate_decision:
             coord_text = f"\n你的队友已经决定刀: {teammate_decision}。你可以选择跟刀同一目标，或提出不同意见。\n"
+        # 历史记忆（刀杀记录+投票记录）
+        memory_lines = []
+        kh = pd.get("kill_history", {})
+        if kh:
+            memory_lines.append("你的刀杀记录：" + "、".join(f"第{d}晚刀{t}号" for d, t in kh.items()))
+            # 检查是否有刀过却仍存活的目标，给出因果解释
+            alive_seats = {p["seat_id"] for p in all_players if p.get("is_alive")}
+            saved = [t for t in kh.values() if t in alive_seats]
+            if saved:
+                saved_str = "、".join(f"{t}号" for t in saved)
+                memory_lines.append(
+                    f"注意：你曾刀过 {saved_str}，但他们目前仍在存活列表中。"
+                    "这说明当时被女巫的解药或守卫保护，刀人未能成功，并非数据错误。"
+                )
+        mv = pd.get("my_votes", {})
+        if mv:
+            memory_lines.append("你的投票记录：" + "、".join(f"第{d}天投{t}号" for d, t in mv.items()))
+        memory_text = "\n".join(memory_lines)
+        if memory_text:
+            memory_text = "\n" + memory_text + "\n"
         prompt = f"""你是{player_name}，你的身份是狼人。
 
+当前是第{day}天夜晚。
 你的狼人队友：{'、'.join(tm_strs)}。
-
+{memory_text}
 现在是夜晚，你需要和队友一起选择今晚要杀死的目标。{coord_text}
 当前存活玩家（排除队友及自己）：
 {self._format_players(alive)}
@@ -146,9 +168,11 @@ class WerewolfHandler(RoleHandler):
             context = f"已有发言：\n" + self._format_history(history)
         else:
             context = ""
+        vote_text = view.get("_last_vote_text", "")
         return f"""你是{player_name}，你的身份是狼人。你在第{day}天{death_label}。
 {context}
-请发表你的遗言。你可以暴露身份、误导好人、或说出你的想法。
+{vote_text}
+请发表你的遗言。你可以暴露身份、误导好人，或说出你的想法。
 注意：只说你有依据的内容，不要编造没有发生过的事情。"""
 
 

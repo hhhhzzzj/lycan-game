@@ -17,6 +17,50 @@ def _coerce_seat(value) -> Optional[int]:
     return seat if 1 <= seat <= 6 else None
 
 
+def _repair_json(s: str) -> str:
+    """修复 JSON 字符串值中的未转义换行/回车符，避免 json.loads 失败。"""
+    result = []
+    in_string = False
+    escape_next = False
+    for ch in s:
+        if escape_next:
+            result.append(ch)
+            escape_next = False
+        elif ch == '\\':
+            result.append(ch)
+            escape_next = True
+        elif ch == '"':
+            in_string = not in_string
+            result.append(ch)
+        elif in_string and ch == '\n':
+            result.append('\\n')
+        elif in_string and ch == '\r':
+            result.append('\\r')
+        else:
+            result.append(ch)
+    return ''.join(result)
+
+
+def _extract_field(text: str, field: str) -> Optional[str]:
+    """从（可能截断的）JSON 字符串中提取指定字段值，容忍未闭合的字符串。"""
+    # 先尝试严格匹配（有闭合引号）
+    strict_pat = rf'"{field}"\s*:\s*"((?:[^"\\]|\\.)*)"'
+    strict = re.search(strict_pat, text)
+    if strict:
+        raw = strict.group(1)
+        return raw.replace('\\n', '\n').replace('\\r', '\r').replace('\\"', '"')
+    # 再尝试宽松匹配（截断，无闭合引号）
+    lenient_pat = rf'"{field}"\s*:\s*"([\s\S]+)'
+    lenient = re.search(lenient_pat, text)
+    if lenient:
+        raw = lenient.group(1)
+        # 截掉尾部可能残留的 JSON 片段（如 ", "target_seat"... 或 "} 等）
+        raw = re.split(r'",\s*"(?:target_seat|thinking|action)"', raw)[0]
+        raw = re.sub(r'"\s*\}?\s*$', '', raw)
+        return raw.replace('\\n', '\n').replace('\\r', '\r').replace('\\"', '"')
+    return None
+
+
 @dataclass
 class LLMResponse:
     """AI 玩家的响应"""
@@ -50,7 +94,7 @@ class LLMResponse:
                     think_content = after_think.strip()
                     remaining = text[:truncated.start()].strip()
 
-        # 尝试提取 JSON
+        # 尝试提取 ```json ``` 代码块中的 JSON
         json_match = re.search(r'```json\s*([\s\S]*?)\s*```', remaining)
         if json_match:
             try:
@@ -74,20 +118,27 @@ class LLMResponse:
         except json.JSONDecodeError:
             pass
 
-        # 降级：剩余文本作为 action（think 内容作为 thinking）
-        # 如果 remaining 看起来像截断的 JSON（以 { 开头，含 thinking/action 字段），尝试正则提取
+        # 尝试修复未转义换行符后再解析（兼容模型在字符串值中输出实际换行的情况）
+        try:
+            data = json.loads(_repair_json(remaining))
+            return cls(
+                thinking=think_content or data.get("thinking", ""),
+                action=data.get("action", ""),
+                target_seat=_coerce_seat(data.get("target_seat")),
+            )
+        except json.JSONDecodeError:
+            pass
+
+        # 降级：字段提取（兼容 JSON 截断/未闭合引号的情况）
         if remaining.startswith('{') and '"action"' in remaining:
-            action_match = re.search(r'"action"\s*:\s*"((?:[^"\\]|\\.)*)"', remaining)
-            thinking_match = re.search(r'"thinking"\s*:\s*"((?:[^"\\]|\\.)*)"', remaining)
-            if action_match:
-                extracted_action = action_match.group(1).replace('\\n', '\n').replace('\\"', '"')
-                extracted_thinking = ""
-                if thinking_match:
-                    extracted_thinking = thinking_match.group(1).replace('\\n', '\n').replace('\\"', '"')
+            action_val = _extract_field(remaining, "action")
+            if action_val:
+                thinking_val = _extract_field(remaining, "thinking") or ""
+                seat_m = re.search(r'"target_seat"\s*:\s*(\d+)', remaining)
                 return cls(
-                    thinking=think_content or extracted_thinking,
-                    action=extracted_action,
-                    target_seat=_coerce_seat(re.search(r'"target_seat"\s*:\s*(\d+)', remaining).group(1)) if re.search(r'"target_seat"\s*:\s*(\d+)', remaining) else None,
+                    thinking=think_content or thinking_val,
+                    action=action_val,
+                    target_seat=_coerce_seat(seat_m.group(1)) if seat_m else None,
                 )
         return cls(thinking=think_content, action=remaining.strip() if remaining.strip() else text.strip())
 

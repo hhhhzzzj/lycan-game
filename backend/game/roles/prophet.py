@@ -29,11 +29,12 @@ class ProphetHandler(RoleHandler):
         return "\n你的投票记录：" + "、".join(f"第{d}天投{t}号" for d, t in mv.items())
 
     def get_night_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
+        day = view.get("day", 1)
         alive = [p for p in view["players"] if p["is_alive"] and p["seat_id"] != view["my_seat_id"]]
         prev_checks = view["private_data"].get("check_results", {})
         return f"""你是{player_name}，你的身份是预言家。
 
-现在是夜晚，你可以查验一名玩家的身份。
+当前是第{day}天夜晚，你可以查验一名玩家的身份。
 
 已验证过的玩家：
 {self._format_checks(prev_checks)}
@@ -42,6 +43,7 @@ class ProphetHandler(RoleHandler):
 {self._format_players(alive)}
 
 请选择你要查验的玩家（输出座位号 1-6）。
+注意：只能查验存活玩家，不能查验自己。
 请在 target_seat 字段填入你的选择。
 """
 
@@ -115,8 +117,10 @@ class ProphetHandler(RoleHandler):
             context = f"已有发言：\n" + self._format_history(history)
         else:
             context = ""
+        vote_text = view.get("_last_vote_text", "")
         return f"""你是{player_name}，你的身份是预言家。你在第{day}天{death_label}。
 {context}
+{vote_text}
 你的查验记录：
 {self._format_checks(checks)}
 

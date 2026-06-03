@@ -34,19 +34,32 @@ class WitchHandler(RoleHandler):
 
     def get_night_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         pd = view["private_data"]
+        day = view.get("day", 1)
         antidote = pd.get("antidote_remaining", 0)
         poison = pd.get("poison_remaining", 0)
         kill_target = pd.get("night_kill_target")
+        potion_history = pd.get("potion_history", [])
         alive = [
             p for p in view["players"]
             if p["is_alive"] and p["seat_id"] != view["my_seat_id"]
         ]
+        # 用药历史
+        history_text = ""
+        if potion_history:
+            history_lines = []
+            for r in potion_history:
+                action_desc = "救" if r["type"] == "save" else "毒"
+                history_lines.append(f"第{r['day']}晚{action_desc}{r['target']}号")
+            history_text = f"\n你的用药记录：{'、'.join(history_lines)}\n"
+
         prompt = f"""你是{player_name}，你的身份是女巫。
 
-当前药水状态：
-  - 解药：{antidote}瓶{'（可用）' if antidote > 0 else '（已用）'}
-  - 毒药：{poison}瓶{'（可用）' if poison > 0 else '（已用）'}
+当前是第{day}天夜晚。
 
+当前药水状态：
+  - 解药：{antidote}瓶{'（可用）' if antidote > 0 else '（已用完）'}
+  - 毒药：{poison}瓶{'（可用）' if poison > 0 else '（已用完）'}
+{history_text}
 """
         if kill_target is not None:
             prompt += f"""今晚狼人刀了 {kill_target} 号玩家。
@@ -64,11 +77,14 @@ class WitchHandler(RoleHandler):
 - 同一晚不能同时使用解药和毒药
 - 解药只能用一次
 - 毒药只能用一次
+- 【同刀同毒规则】即使你今晚被狼人刀中，你仍然有权利在当晚使用毒药（夜晚死亡结算在你用药决定之后，你有机会使用毒药带走一名玩家再死亡）
 
 请输出你的选择：
 - "不使用任何药"（target_seat 填 null）
 - "用解药救 X 号"（target_seat 填被救的人的座位号）
 - "用毒药毒 X 号"（target_seat 填要毒的人的座位号）
+
+【重要】你的 action 字段必须与你在 thinking 中做出的最终决定完全一致。如果你决定不用药，action 就写"不使用任何药"；如果决定救人，action 就写"用解药救 X 号"。
 """
         return prompt
 
@@ -132,8 +148,10 @@ class WitchHandler(RoleHandler):
             context = f"已有发言：\n" + self._format_history(history)
         else:
             context = ""
+        vote_text = view.get("_last_vote_text", "")
         return f"""你是{player_name}，你的身份是女巫。你在第{day}天{death_label}。
 {context}
+{vote_text}
 你的药水状态：解药{pd.get('antidote_remaining', 0)}瓶，毒药{pd.get('poison_remaining', 0)}瓶。
 请发表遗言。
 注意：只说你有依据的内容，不要编造没有发生过的事情。"""

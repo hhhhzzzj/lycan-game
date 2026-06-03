@@ -80,8 +80,10 @@ class VillagerHandler(RoleHandler):
             context = f"这是第{day}天，还没有进行过投票。已有的发言：\n{history_text}"
         else:
             context = f"之前已进行过{day - 1}轮游戏。发言记录：\n{history_text}" if history_text else ""
+        vote_text = view.get("_last_vote_text", "")
         return f"""你是{player_name}，你的身份是村民。你在第{day}天{death_label}。
 {context}
+{vote_text}
 请发表遗言。作为村民，你可以说出你的怀疑对象或最后的建议。
 注意：只说你有依据的内容，不要编造没有发生过的事情。"""
 

@@ -51,6 +51,8 @@ class GameState:
     witch_antidote: int = 1
     witch_poison: int = 1
     private_data: Dict[int, Dict[str, Any]] = field(default_factory=dict)
+    # 累计死亡日志：[{"seat_id": int, "day": int, "reason": "night_kill"|"vote_eliminated"}]
+    death_log: List[Dict[str, Any]] = field(default_factory=list)
 
 
 def create_game_state(player_configs: List[Dict[str, str]]) -> GameState:
@@ -127,6 +129,7 @@ def get_player_view(state: GameState, seat_id: int) -> Dict[str, Any]:
         },
         "killed_last_night": list(state.killed_last_night),
         "night_summary": state.night_summary,
+        "death_log": list(state.death_log),
         "private_data": dict(state.private_data.get(seat_id, {})),
     }
 

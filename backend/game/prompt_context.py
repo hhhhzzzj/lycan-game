@@ -15,6 +15,8 @@ def build_game_summary(state_view: Dict[str, Any]) -> str:
     night_summary = state_view.get("night_summary", "")
     killed = state_view.get("killed_last_night", [])
     votes = state_view.get("votes", {})
+    players = state_view.get("players", [])
+    death_log = state_view.get("death_log", [])
 
     lines = []
     lines.append(f"当前是第{day}天。")
@@ -27,6 +29,27 @@ def build_game_summary(state_view: Dict[str, Any]) -> str:
         vote_summary = "、".join(f"{v}号→{t}号" for v, t in votes.items() if t is not None)
         if vote_summary:
             lines.append(f"上轮投票记录：{vote_summary}")
+
+    # 显式死亡历史（按时间顺序列出所有已死亡玩家及原因）
+    if death_log:
+        death_lines = []
+        for d in death_log:
+            seat = d["seat_id"]
+            dday = d["day"]
+            reason = "夜间被杀" if d["reason"] == "night_kill" else "被投票放逐"
+            p_info = next((p for p in players if p["seat_id"] == seat), None)
+            name = p_info["player_name"] if p_info else f"{seat}号"
+            death_lines.append(f"  第{dday}天 {seat}号({name}) {reason}")
+        lines.append("【死亡记录】\n" + "\n".join(death_lines))
+
+    # 显式存活/死亡状态（最关键的信息）
+    alive = [p for p in players if p.get("is_alive")]
+    dead = [p for p in players if not p.get("is_alive")]
+    alive_str = "、".join(f"{p['seat_id']}号({p['player_name']})" for p in alive)
+    lines.append(f"【当前存活】{alive_str}")
+    if dead:
+        dead_str = "、".join(f"{p['seat_id']}号({p['player_name']})" for p in dead)
+        lines.append(f"【已死亡】{dead_str}")
 
     return "\n".join(lines)
 
