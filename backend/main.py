@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from api.routes import router
 from config_wizard import configure_players_json
+from model_check import main as check_models_main
 from runtime_paths import logs_dir
 
 # 文件日志
@@ -70,4 +71,6 @@ if __name__ == "__main__":
     if "--configure" in sys.argv:
         configure_players_json(force="--force" in sys.argv)
         raise SystemExit(0)
+    if "--check-models" in sys.argv:
+        check_models_main()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

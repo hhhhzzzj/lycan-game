@@ -53,6 +53,13 @@ pause
 '@ | Set-Content -Encoding ASCII (Join-Path $releaseDir "configure.bat")
 
 @'
+@echo off
+cd /d %~dp0
+lycan-game.exe --check-models
+pause
+'@ | Set-Content -Encoding ASCII (Join-Path $releaseDir "check_models.bat")
+
+@'
 # lycan-game Windows Release
 
 1. Double-click `start.bat`.
@@ -60,6 +67,7 @@ pause
 3. The browser opens `http://localhost:8000`.
 
 To change API Key later, double-click `configure.bat`.
+To test a new provider/model before playing, double-click `check_models.bat`.
 
 No Python or Node.js installation is needed for players who use this release package.
 '@ | Set-Content -Encoding UTF8 (Join-Path $releaseDir "README.txt")
