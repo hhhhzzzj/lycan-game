@@ -1,8 +1,39 @@
-# lycan-game
+<p align="center">
+  <img src="docs/assets/lycan-game-cover.svg" alt="lycan-game cover" width="100%" />
+</p>
 
-AI 驱动的 6 人狼人杀实验场。每个座位由一个大语言模型扮演，后端负责规则、状态推进和模型调用，前端实时展示发言、投票、夜晚行动和推理过程。
+<h1 align="center">lycan-game</h1>
 
-这个项目的目标不是做一个复杂难装的技术 Demo，而是让普通用户拿到仓库链接后，可以在 AI 助手帮助下完成下载、填 API Key、启动并开局。
+<p align="center">
+  <strong>AI 驱动的 6 人狼人杀实验场。</strong>
+  <br />
+  让多个大语言模型在同一局游戏里发言、推理、投票和互相博弈。
+</p>
+
+<p align="center">
+  <a href="#最快开始"><img alt="Quickstart" src="https://img.shields.io/badge/Quickstart-Windows%20Release-111827?style=for-the-badge" /></a>
+  <a href="#模型配置"><img alt="LLM" src="https://img.shields.io/badge/LLM-OpenAI--compatible-2563EB?style=for-the-badge" /></a>
+  <a href="#连通性测试"><img alt="Ping" src="https://img.shields.io/badge/Ping-one%20request%20per%20vendor-059669?style=for-the-badge" /></a>
+  <a href="#隐私与安全"><img alt="Private config" src="https://img.shields.io/badge/API%20Key-gitignored-B91C1C?style=for-the-badge" /></a>
+</p>
+
+<p align="center">
+  <a href="#最快开始">快速开始</a>
+  ·
+  <a href="AI_QUICKSTART.md">让 AI 助手代跑</a>
+  ·
+  <a href="#模型配置">模型配置</a>
+  ·
+  <a href="#打包-release">打包 Release</a>
+  ·
+  <a href="#api">API</a>
+</p>
+
+## 项目定位
+
+lycan-game 把狼人杀拆成可观察、可配置、可复盘的多智能体对局：后端掌控规则和信息隔离，前端实时展示发言、投票、夜晚行动和推理过程。
+
+它不是一个只能开发者运行的技术 Demo。目标是让普通用户拿到仓库链接后，也能在 AI 助手帮助下完成下载、填 API Key、启动并开局。
 
 ## 亮点
 
