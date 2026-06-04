@@ -34,6 +34,14 @@
 
 ## 快速开始
 
+### 给 AI 助手的入口
+
+如果你是让 AI 帮你安装运行，把仓库链接和这句话发给 AI：
+
+```text
+请按仓库里的 AI_QUICKSTART.md 帮我启动 lycan-game。优先下载 Release 包；如果没有 Release，再走源码模式。需要 API Key 时在本机终端提示我输入，不要让我把 Key 发到聊天里。
+```
+
 ### 1. 克隆项目
 
 ```bash
@@ -46,8 +54,8 @@ cd lycan-game
 最省事的分享方式是发一个 Windows release 包。对方不需要安装 Python 或 Node.js：
 
 1. 解压 `lycan-game-windows.zip`
-2. 编辑 `config\players.json`，把里面的 `api_key` 占位符替换成自己的 Key
-3. 双击 `start.bat`
+2. 双击 `start.bat`
+3. 按提示粘贴 API Key
 4. 浏览器打开 `http://localhost:8000`
 
 你自己打包 release：
@@ -57,6 +65,8 @@ cd lycan-game
 ```
 
 脚本会构建前端、把后端打成单个 `lycan-game.exe`，并生成 `release\lycan-game-windows.zip`。
+
+重新配置 API Key 时，双击 release 包里的 `configure.bat`。
 
 ## 开发运行
 
@@ -75,6 +85,12 @@ pip install -r requirements.txt
 
 ```bash
 cp config/players.example.json config/players.json
+```
+
+也可以用交互式配置向导：
+
+```bash
+python ../scripts/configure_players.py
 ```
 
 编辑 `config/players.json`，为每位玩家配置 LLM：

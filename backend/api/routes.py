@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from game.engine import GameEngine
 from game.state import get_public_state
+from config_wizard import validate_players_config
 from runtime_paths import config_dir
 
 router = APIRouter()
@@ -26,8 +27,9 @@ def _load_player_configs() -> list[dict]:
     with open(config_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     players = data.get("players", [])
-    if len(players) != 6:
-        raise HTTPException(status_code=500, detail=f"players.json must have exactly 6 players, found {len(players)}")
+    errors = validate_players_config(data)
+    if errors:
+        raise HTTPException(status_code=500, detail="players.json 配置未完成：" + "；".join(errors))
     return players
 
 

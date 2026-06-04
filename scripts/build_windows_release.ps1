@@ -38,6 +38,7 @@ if (-not (Test-Path (Join-Path $releaseDir "config\players.json"))) {
 @echo off
 cd /d %~dp0
 echo Starting AI Werewolf...
+lycan-game.exe --configure
 echo Open http://localhost:8000 in your browser.
 start "" http://localhost:8000
 lycan-game.exe
@@ -45,12 +46,20 @@ pause
 '@ | Set-Content -Encoding ASCII (Join-Path $releaseDir "start.bat")
 
 @'
+@echo off
+cd /d %~dp0
+lycan-game.exe --configure --force
+pause
+'@ | Set-Content -Encoding ASCII (Join-Path $releaseDir "configure.bat")
+
+@'
 # lycan-game Windows Release
 
-1. Edit `config\players.json`.
-2. Replace every `api_key` placeholder with your own key.
-3. Double-click `start.bat`.
-4. Open `http://localhost:8000`.
+1. Double-click `start.bat`.
+2. Paste your API Key when asked.
+3. The browser opens `http://localhost:8000`.
+
+To change API Key later, double-click `configure.bat`.
 
 No Python or Node.js installation is needed for players who use this release package.
 '@ | Set-Content -Encoding UTF8 (Join-Path $releaseDir "README.txt")
