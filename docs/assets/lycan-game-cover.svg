@@ -1,70 +1,125 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#111827"/>
-      <stop offset="0.46" stop-color="#1F2937"/>
-      <stop offset="1" stop-color="#3B1F2B"/>
+      <stop offset="0" stop-color="#07060A"/>
+      <stop offset="0.52" stop-color="#0D0A08"/>
+      <stop offset="1" stop-color="#1C1610"/>
     </linearGradient>
-    <linearGradient id="accent" x1="252" y1="140" x2="996" y2="518" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FDE68A"/>
-      <stop offset="0.48" stop-color="#FB7185"/>
-      <stop offset="1" stop-color="#60A5FA"/>
+    <linearGradient id="panel" x1="162" y1="130" x2="1038" y2="530" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E1812"/>
+      <stop offset="1" stop-color="#120E0A"/>
     </linearGradient>
-    <radialGradient id="moon" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(934 150) rotate(90) scale(132)">
-      <stop stop-color="#FFF7ED"/>
-      <stop offset="0.72" stop-color="#FDE68A"/>
-      <stop offset="1" stop-color="#FDE68A" stop-opacity="0"/>
+    <linearGradient id="button" x1="500" y1="452" x2="700" y2="506" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6B1A1A"/>
+      <stop offset="1" stop-color="#8B2020"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(910 108) rotate(90) scale(165)">
+      <stop stop-color="#B4C8FF" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#B4C8FF" stop-opacity="0"/>
     </radialGradient>
-    <filter id="shadow" x="-40" y="-40" width="1280" height="710" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity="0.35"/>
-    </filter>
+    <radialGradient id="blood" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(225 500) rotate(20) scale(360 170)">
+      <stop stop-color="#6B1A1A" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#6B1A1A" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
   <rect width="1200" height="630" fill="url(#bg)"/>
-  <circle cx="934" cy="150" r="132" fill="url(#moon)" opacity="0.95"/>
-  <path d="M0 448C124 392 215 418 327 454C460 496 598 538 746 466C867 407 1000 398 1200 476V630H0V448Z" fill="#0F172A" opacity="0.72"/>
-  <path d="M0 492C148 428 306 452 442 494C582 537 732 573 913 500C1001 465 1101 462 1200 500V630H0V492Z" fill="#090E18" opacity="0.9"/>
+  <circle cx="910" cy="108" r="165" fill="url(#moon)"/>
+  <ellipse cx="225" cy="500" rx="360" ry="170" fill="url(#blood)"/>
+  <ellipse cx="600" cy="285" rx="520" ry="310" fill="#C9A84C" opacity="0.045"/>
 
-  <g opacity="0.34">
-    <path d="M124 182H222M162 144V242" stroke="#E5E7EB" stroke-width="2"/>
-    <path d="M1034 378H1120M1077 335V421" stroke="#E5E7EB" stroke-width="2"/>
-    <path d="M101 358H151M126 333V383" stroke="#E5E7EB" stroke-width="1.6"/>
-    <circle cx="308" cy="130" r="3" fill="#E5E7EB"/>
-    <circle cx="742" cy="108" r="3" fill="#E5E7EB"/>
-    <circle cx="1096" cy="224" r="2.5" fill="#E5E7EB"/>
-    <circle cx="220" cy="305" r="2.5" fill="#E5E7EB"/>
+  <g opacity="0.18">
+    <circle cx="86" cy="92" r="1.6" fill="#E8DCC8"/>
+    <circle cx="210" cy="172" r="1.2" fill="#C9A84C"/>
+    <circle cx="1110" cy="222" r="1.5" fill="#E8DCC8"/>
+    <circle cx="1034" cy="492" r="1.2" fill="#C9A84C"/>
+    <circle cx="486" cy="74" r="1.4" fill="#E8DCC8"/>
+    <circle cx="720" cy="566" r="1.2" fill="#A83232"/>
   </g>
 
-  <g filter="url(#shadow)">
-    <rect x="130" y="112" width="760" height="368" rx="28" fill="#111827" fill-opacity="0.72" stroke="#FFFFFF" stroke-opacity="0.12"/>
-    <rect x="154" y="136" width="712" height="320" rx="20" fill="#020617" fill-opacity="0.34" stroke="#FFFFFF" stroke-opacity="0.08"/>
-  </g>
+  <rect x="126" y="82" width="948" height="468" rx="22" fill="#090706" opacity="0.64"/>
+  <rect x="140" y="94" width="920" height="442" rx="18" fill="#0D0A08" stroke="#C9A84C" stroke-opacity="0.14" stroke-width="1"/>
 
-  <g transform="translate(192 174)">
-    <text x="0" y="0" fill="#F8FAFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="0">lycan-game</text>
-    <text x="4" y="58" fill="#CBD5E1" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="26" font-weight="500">Multi-agent Werewolf, played by LLMs.</text>
+  <rect x="140" y="94" width="920" height="52" rx="18" fill="#120E0A" stroke="#C9A84C" stroke-opacity="0.12" stroke-width="1"/>
+  <path d="M140 146H1060" stroke="#C9A84C" stroke-opacity="0.12"/>
+  <text x="174" y="126" fill="#C9A84C" font-family="Georgia, 'Times New Roman', serif" font-size="18" font-weight="700" letter-spacing="3">AI 狼人杀</text>
+  <rect x="300" y="108" width="68" height="24" rx="6" fill="#6B1A1A"/>
+  <text x="318" y="125" fill="#E8DCC8" font-family="Georgia, 'Times New Roman', serif" font-size="12" font-weight="700">第1夜</text>
+  <text x="490" y="125" fill="#8A7B68" font-family="Georgia, 'Times New Roman', serif" font-size="13">夜深了，有人正在行动...</text>
+  <circle cx="1016" cy="120" r="4" fill="#4CAF50"/>
+  <text x="936" y="125" fill="#8A7B68" font-family="Georgia, 'Times New Roman', serif" font-size="12">自动播放</text>
 
-    <g transform="translate(4 104)">
-      <rect width="176" height="44" rx="22" fill="#FDE68A" fill-opacity="0.16" stroke="#FDE68A" stroke-opacity="0.42"/>
-      <text x="24" y="29" fill="#FEF3C7" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">6-player game</text>
+  <rect x="164" y="168" width="224" height="338" rx="12" fill="#120E0A" stroke="#C9A84C" stroke-opacity="0.13"/>
+  <rect x="812" y="168" width="224" height="338" rx="12" fill="#120E0A" stroke="#C9A84C" stroke-opacity="0.13"/>
+  <rect x="408" y="168" width="384" height="338" rx="12" fill="url(#panel)" stroke="#C9A84C" stroke-opacity="0.16"/>
 
-      <rect x="196" width="190" height="44" rx="22" fill="#FB7185" fill-opacity="0.15" stroke="#FB7185" stroke-opacity="0.42"/>
-      <text x="220" y="29" fill="#FFE4E6" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">real-time UI</text>
+  <text x="188" y="202" fill="#C9A84C" font-family="Georgia, 'Times New Roman', serif" font-size="14" font-weight="700">玩家席位</text>
+  <text x="836" y="202" fill="#C9A84C" font-family="Georgia, 'Times New Roman', serif" font-size="14" font-weight="700">事件记录</text>
 
-      <rect x="408" width="264" height="44" rx="22" fill="#60A5FA" fill-opacity="0.14" stroke="#60A5FA" stroke-opacity="0.42"/>
-      <text x="432" y="29" fill="#DBEAFE" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">OpenAI-compatible</text>
+  <g font-family="Georgia, 'Times New Roman', serif">
+    <g transform="translate(188 222)">
+      <rect width="176" height="44" rx="8" fill="#1E1812" stroke="#6E5520"/>
+      <circle cx="24" cy="22" r="14" fill="#6B1A1A"/>
+      <text x="20" y="27" fill="#DDD6C8" font-size="12" font-weight="700">1</text>
+      <text x="48" y="20" fill="#E8DCC8" font-size="13" font-weight="700">小明</text>
+      <text x="48" y="34" fill="#8A7B68" font-size="10">MiniMax / 狼人</text>
+      <circle cx="160" cy="22" r="4" fill="#4CAF50"/>
     </g>
-
-    <path d="M4 204H672" stroke="url(#accent)" stroke-width="3" stroke-linecap="round"/>
-
-    <text x="4" y="255" fill="#E5E7EB" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="24" font-weight="600">开箱填 Key，启动一局由 AI 自己博弈的狼人杀。</text>
+    <g transform="translate(188 278)">
+      <rect width="176" height="44" rx="8" fill="#1E1812" stroke="#C9A84C" stroke-opacity="0.05"/>
+      <circle cx="24" cy="22" r="14" fill="#6B1A1A"/>
+      <text x="20" y="27" fill="#DDD6C8" font-size="12" font-weight="700">2</text>
+      <text x="48" y="20" fill="#E8DCC8" font-size="13" font-weight="700">小红</text>
+      <text x="48" y="34" fill="#8A7B68" font-size="10">DeepSeek / 预言家</text>
+      <circle cx="160" cy="22" r="4" fill="#4CAF50"/>
+    </g>
+    <g transform="translate(188 334)">
+      <rect width="176" height="44" rx="8" fill="#1E1812" stroke="#C9A84C" stroke-opacity="0.05"/>
+      <circle cx="24" cy="22" r="14" fill="#6B1A1A"/>
+      <text x="20" y="27" fill="#DDD6C8" font-size="12" font-weight="700">3</text>
+      <text x="48" y="20" fill="#E8DCC8" font-size="13" font-weight="700">小刚</text>
+      <text x="48" y="34" fill="#8A7B68" font-size="10">Mimo / 村民</text>
+      <circle cx="160" cy="22" r="4" fill="#4CAF50"/>
+    </g>
+    <g transform="translate(188 390)">
+      <rect width="176" height="44" rx="8" fill="#1E1812" stroke="#C9A84C" stroke-opacity="0.05"/>
+      <circle cx="24" cy="22" r="14" fill="#6B1A1A"/>
+      <text x="20" y="27" fill="#DDD6C8" font-size="12" font-weight="700">4</text>
+      <text x="48" y="20" fill="#E8DCC8" font-size="13" font-weight="700">小丽</text>
+      <text x="48" y="34" fill="#8A7B68" font-size="10">Doubao / 女巫</text>
+      <circle cx="160" cy="22" r="4" fill="#4CAF50"/>
+    </g>
   </g>
 
-  <g transform="translate(828 304)">
-    <path d="M58 23C84 -8 145 -8 171 23C196 53 182 105 145 134C131 145 111 164 87 198C63 164 43 145 29 134C-8 105 -22 53 3 23C14 9 29 2 44 2C51 2 54 9 58 23Z" fill="#F8FAFC" fill-opacity="0.92"/>
-    <path d="M57 76C52 56 63 42 84 40C78 52 83 65 96 71C112 79 128 70 133 54C150 66 151 91 135 111C118 132 83 141 61 120C47 107 44 91 57 76Z" fill="#111827"/>
-    <circle cx="61" cy="68" r="8" fill="#FB7185"/>
-    <circle cx="130" cy="68" r="8" fill="#FB7185"/>
-    <path d="M79 104C91 114 106 114 118 104" stroke="#F8FAFC" stroke-width="6" stroke-linecap="round"/>
+  <g transform="translate(432 208)" font-family="Georgia, 'Times New Roman', serif">
+    <text x="168" y="0" text-anchor="middle" fill="#C9A84C" font-size="56" font-weight="800" letter-spacing="1">lycan-game</text>
+    <text x="168" y="34" text-anchor="middle" fill="#8A7B68" font-size="15">OpenAI-compatible multi-agent Werewolf</text>
+
+    <rect x="48" y="74" width="240" height="104" rx="12" fill="#0D0A08" stroke="#C9A84C" stroke-opacity="0.13"/>
+    <text x="72" y="108" fill="#E8DCC8" font-size="15" font-weight="700">当前行动</text>
+    <text x="72" y="134" fill="#C9A84C" font-size="22" font-weight="700">1号 小明</text>
+    <text x="72" y="158" fill="#8A7B68" font-size="13">正在思考夜晚行动...</text>
+
+    <rect x="30" y="206" width="276" height="50" rx="12" fill="#120E0A" stroke="#C9A84C" stroke-opacity="0.14"/>
+    <text x="54" y="237" fill="#E8DCC8" font-size="14">先稳住发言顺序，再观察投票倾向。</text>
+
+    <rect x="68" y="288" width="200" height="48" rx="9" fill="url(#button)" stroke="#C9A84C" stroke-opacity="0.25"/>
+    <text x="168" y="318" text-anchor="middle" fill="#E8DCC8" font-size="16" font-weight="700">开始游戏</text>
   </g>
+
+  <g transform="translate(836 226)" font-family="Georgia, 'Times New Roman', serif">
+    <circle cx="6" cy="6" r="3" fill="#C9A84C"/>
+    <text x="20" y="11" fill="#E8DCC8" font-size="12">游戏初始化完成</text>
+    <circle cx="6" cy="48" r="3" fill="#A83232"/>
+    <text x="20" y="53" fill="#E8DCC8" font-size="12">夜晚阶段开始</text>
+    <circle cx="6" cy="90" r="3" fill="#6E5520"/>
+    <text x="20" y="95" fill="#8A7B68" font-size="12">等待模型返回发言</text>
+    <circle cx="6" cy="132" r="3" fill="#4CAF50"/>
+    <text x="20" y="137" fill="#8A7B68" font-size="12">WebSocket 已连接</text>
+    <rect x="0" y="188" width="180" height="1" fill="#C9A84C" opacity="0.12"/>
+    <text x="0" y="224" fill="#C9A84C" font-size="13" font-weight="700">低成本验证</text>
+    <text x="0" y="249" fill="#8A7B68" font-size="12">每家厂商只 ping 一次</text>
+  </g>
+
+  <path d="M174 558C276 532 390 548 500 572C640 604 751 584 866 552C950 529 1019 535 1071 557" stroke="#C9A84C" stroke-width="1" stroke-opacity="0.13"/>
 </svg>
