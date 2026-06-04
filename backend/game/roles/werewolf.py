@@ -116,7 +116,7 @@ class WerewolfHandler(RoleHandler):
             view.get("speech_history", []), day, exclude_seat=view.get("my_seat_id"))
         speak_hint = view.get("_speak_order_hint", "")
 
-        action_context = f"你昨晚的行动：{last_action}" if last_action else ""
+        action_context = f"你的私密夜间记忆（只能用于内心判断，白天绝不能直接说出口）：{last_action}" if last_action else ""
 
         return f"""你是{player_name}，你的身份是狼人。
 
@@ -137,7 +137,8 @@ class WerewolfHandler(RoleHandler):
 - 保护你的狼队友（不要让集火对准他们）
 
 请用自然的中文发言。发言环节 target_seat 填 null。
-【重要】你是狼人但要伪装成好人。不要透露你知道谁是队友、你昨晚刀了谁等狼人独有信息。"""
+【重要】你是狼人但要伪装成好人。不要透露你知道谁是队友、你昨晚刀了谁、谁被女巫救过等狼人独有信息。
+【公开发言禁区】不要使用“我刀了/我们刀了/队友/狼队/昨晚刀人目标/刀杀记录”等暴露狼人视角的说法。"""
 
     def get_vote_prompt(self, player_name: str, view: Dict[str, Any]) -> str:
         from game.prompt_context import build_today_transcript, build_alive_players_list
@@ -172,7 +173,7 @@ class WerewolfHandler(RoleHandler):
         return f"""你是{player_name}，你的身份是狼人。你在第{day}天{death_label}。
 {context}
 {vote_text}
-请发表你的遗言。你可以暴露身份、误导好人，或说出你的想法。
+请发表你的遗言。你已经出局，不能再参与后续夜晚刀人、发言或投票。你可以暴露身份、误导好人，或说出你的想法。
 注意：只说你有依据的内容，不要编造没有发生过的事情。"""
 
 

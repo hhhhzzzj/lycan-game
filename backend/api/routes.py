@@ -11,11 +11,12 @@ from pydantic import BaseModel, Field
 
 from game.engine import GameEngine
 from game.state import get_public_state
+from runtime_paths import config_dir
 
 router = APIRouter()
 
 _active_games: Dict[str, GameEngine] = {}
-CONFIG_DIR = Path(__file__).parent.parent / "config"
+CONFIG_DIR = config_dir()
 
 
 def _load_player_configs() -> list[dict]:

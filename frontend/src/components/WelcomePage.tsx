@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import GameBackground from './GameBackground';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE ?? window.location.origin;
 
 interface PlayerDisplay {
     seat_id: number;

@@ -84,7 +84,7 @@ class VillagerHandler(RoleHandler):
         return f"""你是{player_name}，你的身份是村民。你在第{day}天{death_label}。
 {context}
 {vote_text}
-请发表遗言。作为村民，你可以说出你的怀疑对象或最后的建议。
+请发表遗言。你已经出局，不能再参与后续发言或投票。作为村民，你可以说出你的怀疑对象或最后的建议。
 注意：只说你有依据的内容，不要编造没有发生过的事情。"""
 
 

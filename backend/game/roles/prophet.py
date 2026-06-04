@@ -39,7 +39,7 @@ class ProphetHandler(RoleHandler):
 已验证过的玩家：
 {self._format_checks(prev_checks)}
 
-存活玩家：
+可查验目标（其他存活玩家，不包含你自己；你仍然是存活且可以行动的）：
 {self._format_players(alive)}
 
 请选择你要查验的玩家（输出座位号 1-6）。
@@ -124,7 +124,7 @@ class ProphetHandler(RoleHandler):
 你的查验记录：
 {self._format_checks(checks)}
 
-请发表遗言。你可以报出所有查验结果，或给出最后的建议。
+请发表遗言。你已经出局，不能再参与后续夜晚查验、发言或投票；只能报出已发生的查验结果，或给出最后的建议。
 注意：只说你有依据的内容，不要编造没有发生过的事情。"""
 
 

@@ -1,0 +1,52 @@
+{
+  "players": [
+    {
+      "seat_id": 1,
+      "player_name": "小明",
+      "model_name": "MiniMax-M3",
+      "provider": "openai",
+      "api_key": "sk-minimax-xxx",
+      "base_url": "https://api.minimaxi.com/v1"
+    },
+    {
+      "seat_id": 2,
+      "player_name": "小红",
+      "model_name": "deepseek-v4-flash",
+      "provider": "openai",
+      "api_key": "sk-deepseek-xxx",
+      "base_url": "https://api.deepseek.com/v1"
+    },
+    {
+      "seat_id": 3,
+      "player_name": "小刚",
+      "model_name": "mimo-v2.5-pro",
+      "provider": "openai",
+      "api_key": "tp-mimo-xxx",
+      "base_url": "https://token-plan-sgp.xiaomimimo.com/v1"
+    },
+    {
+      "seat_id": 4,
+      "player_name": "小丽",
+      "model_name": "deepseek-v4-pro",
+      "provider": "openai",
+      "api_key": "sk-deepseek-xxx",
+      "base_url": "https://api.deepseek.com/v1"
+    },
+    {
+      "seat_id": 5,
+      "player_name": "小华",
+      "model_name": "MiniMax-M3",
+      "provider": "openai",
+      "api_key": "sk-minimax-xxx",
+      "base_url": "https://api.minimaxi.com/v1"
+    },
+    {
+      "seat_id": 6,
+      "player_name": "小强",
+      "model_name": "mimo-v2.5",
+      "provider": "openai",
+      "api_key": "tp-mimo-xxx",
+      "base_url": "https://token-plan-sgp.xiaomimimo.com/v1"
+    }
+  ]
+}

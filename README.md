@@ -38,10 +38,29 @@
 
 ```bash
 git clone <repo-url>
-cd sand-box
+cd lycan-game
 ```
 
-### 2. 后端配置
+## 分享给朋友玩
+
+最省事的分享方式是发一个 Windows release 包。对方不需要安装 Python 或 Node.js：
+
+1. 解压 `lycan-game-windows.zip`
+2. 编辑 `config\players.json`，把里面的 `api_key` 占位符替换成自己的 Key
+3. 双击 `start.bat`
+4. 浏览器打开 `http://localhost:8000`
+
+你自己打包 release：
+
+```powershell
+.\scripts\build_windows_release.ps1
+```
+
+脚本会构建前端、把后端打成单个 `lycan-game.exe`，并生成 `release\lycan-game-windows.zip`。
+
+## 开发运行
+
+### 1. 后端配置
 
 ```bash
 cd backend
@@ -86,9 +105,9 @@ cp config/players.example.json config/players.json
 python main.py
 ```
 
-后端默认运行在 `http://localhost:8000`。
+后端默认运行在 `http://localhost:8000`。如果已经执行过前端构建，也可以直接访问这个地址打开页面。
 
-### 3. 前端启动
+### 2. 前端启动
 
 ```bash
 cd frontend

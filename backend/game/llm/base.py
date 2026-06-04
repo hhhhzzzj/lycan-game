@@ -70,6 +70,13 @@ class LLMResponse:
 
     @classmethod
     def from_text(cls, text: str) -> "LLMResponse":
+        return cls._from_text(text, depth=0)
+
+    @classmethod
+    def _from_text(cls, text: str, depth: int) -> "LLMResponse":
+        if depth > 2:
+            return cls(thinking="", action=text.strip())
+
         # 剥离 DeepSeek Reasoner 的 <think>...</think> 标签
         # 同时处理 MiniMax 的 <thinking>...</thinking> 标签
         think_content = ""
@@ -110,6 +117,13 @@ class LLMResponse:
         # 尝试直接解析 JSON
         try:
             data = json.loads(remaining)
+            if isinstance(data, str):
+                nested = cls._from_text(data, depth=depth + 1)
+                return cls(
+                    thinking=think_content or nested.thinking,
+                    action=nested.action,
+                    target_seat=nested.target_seat,
+                )
             return cls(
                 thinking=think_content or data.get("thinking", ""),
                 action=data.get("action", ""),
@@ -121,6 +135,13 @@ class LLMResponse:
         # 尝试修复未转义换行符后再解析（兼容模型在字符串值中输出实际换行的情况）
         try:
             data = json.loads(_repair_json(remaining))
+            if isinstance(data, str):
+                nested = cls._from_text(data, depth=depth + 1)
+                return cls(
+                    thinking=think_content or nested.thinking,
+                    action=nested.action,
+                    target_seat=nested.target_seat,
+                )
             return cls(
                 thinking=think_content or data.get("thinking", ""),
                 action=data.get("action", ""),
@@ -140,6 +161,11 @@ class LLMResponse:
                     action=action_val,
                     target_seat=_coerce_seat(seat_m.group(1)) if seat_m else None,
                 )
+            thinking_val = _extract_field(remaining, "thinking") or ""
+            return cls(
+                thinking=think_content or thinking_val,
+                action="（发言内容解析失败）",
+            )
         return cls(thinking=think_content, action=remaining.strip() if remaining.strip() else text.strip())
 
 

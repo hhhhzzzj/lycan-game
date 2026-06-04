@@ -7,11 +7,15 @@
   - 包含：角色配置、每夜行动细节（思考+目标）、白天发言、投票、死亡
   - 增量写入（line-buffered），游戏进行中即可 tail 查看
 """
+import logging
+import tempfile
 import time
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TextIO
+
+from runtime_paths import logs_dir
 
 
 ROLE_LABELS = {
@@ -58,14 +62,43 @@ class GameSummaryLogger:
 
     def __init__(self, log_dir: Optional[Path] = None):
         if log_dir is None:
-            log_dir = Path(__file__).parent.parent / "logs" / "summary"
+            log_dir = logs_dir() / "summary"
         log_dir.mkdir(parents=True, exist_ok=True)
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.path = log_dir / f"game_{ts}.txt"
-        # line-buffered so tail -f works during a live game
-        self._f = open(self.path, "w", encoding="utf-8", buffering=1)
+        self.path, self._f = self._open_log_file(log_dir)
         self._players: Dict[int, Dict] = {}   # seat_id -> {seat_id, player_name, model_name, role}
         self._start_time = time.time()
+
+    def _open_log_file(self, primary_dir: Path) -> tuple[Path, TextIO]:
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        fallback_dir = Path(tempfile.gettempdir()) / "lycan-game-summary"
+        candidate_dirs = [primary_dir]
+        if fallback_dir != primary_dir:
+            candidate_dirs.append(fallback_dir)
+
+        last_error: Optional[OSError] = None
+        for directory in candidate_dirs:
+            try:
+                directory.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                last_error = exc
+                continue
+
+            for suffix in [""] + [f"_{idx:02d}" for idx in range(1, 6)]:
+                path = directory / f"game_{ts}{suffix}.txt"
+                try:
+                    # Use exclusive creation so concurrent starts do not collide.
+                    handle = open(path, "x", encoding="utf-8", buffering=1)
+                    return path, handle
+                except FileExistsError:
+                    continue
+                except OSError as exc:
+                    last_error = exc
+                    break
+
+        if last_error is not None:
+            logging.warning("Failed to create summary log file, falling back to null device: %s", last_error)
+        null_path = Path("NUL")
+        return null_path, open(null_path, "w", encoding="utf-8", buffering=1)
 
     # ── internal helpers ────────────────────────────────────────────
 

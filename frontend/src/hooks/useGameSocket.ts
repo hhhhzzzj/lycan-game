@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PublicGameState } from '../types/game';
 
-const WS_BASE = 'ws://localhost:8000';
+const WS_BASE = import.meta.env.VITE_WS_BASE ?? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
 
 export function useGameSocket(gameId: string | null) {
   const [gameState, setGameState] = useState<PublicGameState | null>(null);

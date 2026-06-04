@@ -117,3 +117,18 @@ def test_llm_response_target_seat_out_of_range_is_none():
 def test_llm_response_target_seat_string_coerced():
     resp = LLMResponse.from_text('{"thinking": "t", "action": "a", "target_seat": "4"}')
     assert resp.target_seat == 4
+
+
+def test_llm_response_unwraps_json_string_payload():
+    resp = LLMResponse.from_text(
+        '"{\\"thinking\\": \\"分析局势\\", \\"action\\": \\"我建议投6号\\", \\"target_seat\\": 6}"'
+    )
+    assert resp.thinking == "分析局势"
+    assert resp.action == "我建议投6号"
+    assert resp.target_seat == 6
+
+
+def test_llm_response_does_not_leak_truncated_json_as_action():
+    resp = LLMResponse.from_text('{"thinking": "残局分析很长", "action": "我认为6')
+    assert "残局分析" in resp.thinking
+    assert not resp.action.startswith('{"thinking"')

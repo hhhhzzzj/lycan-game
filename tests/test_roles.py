@@ -47,10 +47,29 @@ def test_prophet_night_prompt():
     handler = ProphetHandler()
     prompt = handler.get_night_prompt(
         player_name="玩家5",
-        view={"private_data": {"check_results": {}}, "players": []},
+        view={"my_seat_id": 5, "private_data": {"check_results": {}}, "players": []},
     )
     assert "预言家" in prompt
     assert "查验" in prompt
+
+
+def test_prophet_night_prompt_clarifies_self_is_excluded():
+    handler = ProphetHandler()
+    prompt = handler.get_night_prompt(
+        player_name="玩家4",
+        view={
+            "my_seat_id": 4,
+            "day": 2,
+            "private_data": {"check_results": {"1": "狼人"}},
+            "players": [
+                {"seat_id": 2, "player_name": "玩家2", "is_alive": True},
+                {"seat_id": 3, "player_name": "玩家3", "is_alive": True},
+                {"seat_id": 4, "player_name": "玩家4", "is_alive": True},
+            ],
+        },
+    )
+    assert "不包含你自己" in prompt
+    assert "你仍然是存活" in prompt
 
 
 def test_witch_night_prompt():
@@ -73,6 +92,42 @@ def test_witch_night_prompt():
     )
     assert "女巫" in prompt
     assert "2号" in prompt
+
+
+def test_witch_first_night_self_save_hint():
+    handler = WitchHandler()
+    prompt = handler.get_night_prompt(
+        player_name="玩家3",
+        view={
+            "my_seat_id": 3,
+            "day": 1,
+            "private_data": {
+                "antidote_remaining": 1,
+                "poison_remaining": 1,
+                "night_kill_target": 3,
+            },
+            "players": [
+                {"seat_id": 1, "player_name": "玩家1", "is_alive": True},
+                {"seat_id": 3, "player_name": "玩家3", "is_alive": True},
+            ],
+        },
+    )
+    assert "强烈建议使用解药自救" in prompt
+
+
+def test_witch_last_words_cannot_use_potions_after_death():
+    handler = WitchHandler()
+    prompt = handler.get_last_words_prompt(
+        player_name="玩家3",
+        view={
+            "day": 2,
+            "private_data": {"antidote_remaining": 1, "poison_remaining": 1},
+            "full_history": [],
+            "speech_history": [],
+        },
+    )
+    assert "已经出局" in prompt
+    assert "不能再使用解药或毒药" in prompt
 
 
 def test_villager_day_prompt():

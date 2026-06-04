@@ -125,6 +125,9 @@ class GameEngine:
         logger.debug(f"[AI输入] {seat_id}号({player.player_name}, {player.role}) 收到的prompt:\n{prompt[:2000]}")
         try:
             response = await adapter.call(system_prompt, prompt)
+            if not (response.action or "").strip():
+                logger.warning(f"[AI空发言] {seat_id}号({player.player_name}, {player.role}) action为空，启用兜底")
+                response.action = "我暂时没有更多信息，先听大家发言再判断。"
             logger.debug(f"[AI输出] {seat_id}号 thinking: {response.thinking[:500]}")
             logger.debug(f"[AI输出] {seat_id}号 action: {response.action[:500]}")
             return {

@@ -65,11 +65,16 @@ class WitchHandler(RoleHandler):
             prompt += f"""今晚狼人刀了 {kill_target} 号玩家。
 你可以选择是否使用解药救活 {kill_target} 号玩家。
 """
+            if kill_target == view["my_seat_id"] and day == 1 and antidote > 0:
+                prompt += (
+                    "【强策略提示】今晚被刀的是你自己。6人局女巫首夜被刀时，"
+                    "强烈建议使用解药自救；否则你会立刻死亡，通常会让好人阵营大劣。\n"
+                )
         if poison > 0:
             prompt += f"""
 你也可以使用毒药毒杀一名存活玩家。
 
-存活玩家：
+可毒杀目标（其他存活玩家，不包含你自己；你仍然是存活且可以行动的）：
 {self._format_players(alive)}
 """
         prompt += """
@@ -92,20 +97,26 @@ class WitchHandler(RoleHandler):
         from game.prompt_context import build_game_summary, build_today_transcript
         day = view["day"]
         pd = view["private_data"]
-        last_action = pd.get("last_night_action", "")
+        kill_target = pd.get("night_kill_target")
 
         game_summary = build_game_summary(view)
         today_speeches = build_today_transcript(
             view.get("speech_history", []), day, exclude_seat=view.get("my_seat_id"))
         speak_hint = view.get("_speak_order_hint", "")
-        action_context = f"你昨晚的行动：{last_action}" if last_action else ""
+        kill_context = (
+            f"最近一晚狼人刀口：{kill_target}号。"
+            if kill_target is not None
+            else "最近一晚你没有收到明确刀口信息。"
+        )
 
         return f"""你是{player_name}，你的身份是女巫。
 
 【局势摘要】
 {game_summary}
 你的药水状态：解药{pd.get('antidote_remaining', 0)}瓶，毒药{pd.get('poison_remaining', 0)}瓶。
-{action_context}{self._format_my_votes(view)}
+{kill_context}
+注意：最近一晚刀口只指刚刚过去的夜晚；你的用药记录是历史信息，不等于最近一晚刀口。
+{self._format_my_votes(view)}
 
 【今日发言记录】
 {today_speeches}
@@ -114,7 +125,7 @@ class WitchHandler(RoleHandler):
 
 {view.get("_strategy_hint", "")}
 
-请发表你的看法。作为女巫，你知道昨晚谁被刀了（如果你还活着），这是重要信息。
+请发表你的看法。作为女巫，你知道最近一晚谁被刀了（如果你还活着），这是重要信息。
 你可以选择性地透露信息来帮助好人阵营。
 
 请用自然的中文发言。发言环节 target_seat 填 null。"""
@@ -152,8 +163,8 @@ class WitchHandler(RoleHandler):
         return f"""你是{player_name}，你的身份是女巫。你在第{day}天{death_label}。
 {context}
 {vote_text}
-你的药水状态：解药{pd.get('antidote_remaining', 0)}瓶，毒药{pd.get('poison_remaining', 0)}瓶。
-请发表遗言。
+你的出局前药水状态：解药{pd.get('antidote_remaining', 0)}瓶，毒药{pd.get('poison_remaining', 0)}瓶。
+请发表遗言。你已经出局，不能再使用解药或毒药，也不能参与后续夜晚行动、发言或投票。
 注意：只说你有依据的内容，不要编造没有发生过的事情。"""
 
 
