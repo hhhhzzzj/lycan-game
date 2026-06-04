@@ -67,7 +67,7 @@ cd lycan-game
 脚本会构建前端、把后端打成单个 `lycan-game.exe`，并生成 `release\lycan-game-windows.zip`。
 
 重新配置 API Key 时，双击 release 包里的 `configure.bat`。
-接入新厂商或新模型时，先双击 `check_models.bat` 做模型自检；失败时把窗口里的失败阶段和建议发给帮你运行的 AI。
+接入新厂商或新模型时，先双击 `ping_model.bat` 做快速连通性测试；失败时把窗口里的失败原因发给帮你运行的 AI。
 
 ## 开发运行
 
@@ -94,10 +94,11 @@ cp config/players.example.json config/players.json
 python ../scripts/configure_players.py
 ```
 
-接入新厂商或新模型后，建议先跑模型自检：
+接入新厂商或新模型后，先跑快速连通性测试；只有遇到游戏内空发言/不按格式输出时，再跑模型自检：
 
 ```bash
-python ../scripts/check_models.py
+python ../scripts/ping_model.py --seat 1 --timeout 20
+python ../scripts/check_models.py --seat 1 --timeout 30
 ```
 
 编辑 `config/players.json`，为每位玩家配置 LLM：

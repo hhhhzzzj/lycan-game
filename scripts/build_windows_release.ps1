@@ -55,9 +55,16 @@ pause
 @'
 @echo off
 cd /d %~dp0
-lycan-game.exe --check-models
+lycan-game.exe --check-models --seat 1 --timeout 30
 pause
 '@ | Set-Content -Encoding ASCII (Join-Path $releaseDir "check_models.bat")
+
+@'
+@echo off
+cd /d %~dp0
+lycan-game.exe --ping-model --seat 1 --timeout 20
+pause
+'@ | Set-Content -Encoding ASCII (Join-Path $releaseDir "ping_model.bat")
 
 @'
 # lycan-game Windows Release
@@ -67,6 +74,7 @@ pause
 3. The browser opens `http://localhost:8000`.
 
 To change API Key later, double-click `configure.bat`.
+To quickly check connectivity, double-click `ping_model.bat`.
 To test a new provider/model before playing, double-click `check_models.bat`.
 
 No Python or Node.js installation is needed for players who use this release package.

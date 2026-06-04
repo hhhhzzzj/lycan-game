@@ -1,0 +1,52 @@
+{
+  "players": [
+    {
+      "seat_id": 1,
+      "player_name": "小明",
+      "model_name": "doubao-seed-2-0-lite-260215",
+      "provider": "openai",
+      "api_key": "YOUR_VOLCENGINE_API_KEY",
+      "base_url": "https://ark.cn-beijing.volces.com/api/v3"
+    },
+    {
+      "seat_id": 2,
+      "player_name": "小红",
+      "model_name": "doubao-seed-2-0-lite-260215",
+      "provider": "openai",
+      "api_key": "YOUR_VOLCENGINE_API_KEY",
+      "base_url": "https://ark.cn-beijing.volces.com/api/v3"
+    },
+    {
+      "seat_id": 3,
+      "player_name": "小刚",
+      "model_name": "doubao-seed-2-0-lite-260215",
+      "provider": "openai",
+      "api_key": "YOUR_VOLCENGINE_API_KEY",
+      "base_url": "https://ark.cn-beijing.volces.com/api/v3"
+    },
+    {
+      "seat_id": 4,
+      "player_name": "小丽",
+      "model_name": "doubao-seed-2-0-lite-260215",
+      "provider": "openai",
+      "api_key": "YOUR_VOLCENGINE_API_KEY",
+      "base_url": "https://ark.cn-beijing.volces.com/api/v3"
+    },
+    {
+      "seat_id": 5,
+      "player_name": "小华",
+      "model_name": "doubao-seed-2-0-lite-260215",
+      "provider": "openai",
+      "api_key": "YOUR_VOLCENGINE_API_KEY",
+      "base_url": "https://ark.cn-beijing.volces.com/api/v3"
+    },
+    {
+      "seat_id": 6,
+      "player_name": "小强",
+      "model_name": "doubao-seed-2-0-lite-260215",
+      "provider": "openai",
+      "api_key": "YOUR_VOLCENGINE_API_KEY",
+      "base_url": "https://ark.cn-beijing.volces.com/api/v3"
+    }
+  ]
+}

@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from api.routes import router
 from config_wizard import configure_players_json
 from model_check import main as check_models_main
+from model_ping import main as ping_model_main
 from runtime_paths import logs_dir
 
 # 文件日志
@@ -72,5 +73,7 @@ if __name__ == "__main__":
         configure_players_json(force="--force" in sys.argv)
         raise SystemExit(0)
     if "--check-models" in sys.argv:
-        check_models_main()
+        check_models_main(sys.argv[1:])
+    if "--ping-model" in sys.argv:
+        ping_model_main(sys.argv[1:])
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

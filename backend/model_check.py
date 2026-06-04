@@ -1,4 +1,5 @@
 """Provider/model readiness checks for configured players."""
+import argparse
 import asyncio
 import json
 from dataclasses import dataclass
@@ -25,20 +26,29 @@ class CheckResult:
 CHECKS = [
     (
         "basic_json",
-        "你是 API 连通性测试助手。必须输出合法 JSON。",
-        '{"thinking":"简短思考","action":"你好，连接正常","target_seat":null}',
+        (
+            "你是 API 连通性测试助手。必须只输出合法 JSON，"
+            '格式为 {"thinking":"简短思考","action":"可见回复","target_seat":null}。'
+        ),
+        "请回复连接正常。action 必须是非空字符串。",
         False,
     ),
     (
         "werewolf_context",
-        "你正在玩一局 6 人狼人杀。必须输出合法 JSON，不要拒答。",
-        "你是 1 号玩家，请用一句自然发言说明你会听大家发言再判断。",
+        (
+            "你正在玩一局 6 人狼人杀。必须只输出合法 JSON，不要拒答，"
+            '格式为 {"thinking":"简短思考","action":"你的自然发言","target_seat":null}。'
+        ),
+        "你是 1 号玩家，请用一句自然发言说明你会听大家发言再判断。action 必须非空。",
         False,
     ),
     (
         "target_seat",
-        "你正在玩一局 6 人狼人杀。必须输出合法 JSON。",
-        '请从 2号、3号 中选择一个投票目标，并把座位号填入 target_seat。',
+        (
+            "你正在玩一局 6 人狼人杀。必须只输出合法 JSON，"
+            '格式为 {"thinking":"简短思考","action":"我选择投票给X号","target_seat":2}。'
+        ),
+        '请从 2号、3号 中选择一个投票目标。action 必须说明选择，target_seat 必须填 2 或 3。',
         True,
     ),
 ]
@@ -79,7 +89,15 @@ def _suggestion(stage: str, message: str, base_url: str) -> str:
     return "请把该厂商的 base_url、model_name 与 OpenAI-compatible 文档再核对一遍。"
 
 
-async def check_player(player: dict[str, Any]) -> list[CheckResult]:
+def _print_progress(player: dict[str, Any], stage: str):
+    print(
+        f"正在检测: {player['seat_id']}号 {player['player_name']} | "
+        f"{player['model_name']} | {stage}",
+        flush=True,
+    )
+
+
+async def check_player(player: dict[str, Any], timeout: float) -> list[CheckResult]:
     adapter = create_adapter(
         provider=player.get("provider", "openai"),
         model=player["model_name"],
@@ -88,8 +106,9 @@ async def check_player(player: dict[str, Any]) -> list[CheckResult]:
     )
     results: list[CheckResult] = []
     for stage, system_prompt, user_prompt, require_target in CHECKS:
+        _print_progress(player, stage)
         try:
-            resp = await asyncio.wait_for(adapter.call(system_prompt, user_prompt), timeout=150.0)
+            resp = await asyncio.wait_for(adapter.call(system_prompt, user_prompt), timeout=timeout)
         except Exception as exc:
             message = _short_error(exc)
             results.append(CheckResult(
@@ -160,6 +179,24 @@ async def check_player(player: dict[str, Any]) -> list[CheckResult]:
     return results
 
 
+def _filter_players(
+    players: list[dict[str, Any]],
+    seats: set[int],
+    base_url_contains: str,
+    model_contains: str,
+) -> list[dict[str, Any]]:
+    selected = []
+    for player in players:
+        if seats and player.get("seat_id") not in seats:
+            continue
+        if base_url_contains and base_url_contains.lower() not in (player.get("base_url") or "").lower():
+            continue
+        if model_contains and model_contains.lower() not in (player.get("model_name") or "").lower():
+            continue
+        selected.append(player)
+    return selected
+
+
 def _representative_players(players: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen = set()
     selected = []
@@ -189,18 +226,41 @@ def print_results(results: list[CheckResult]) -> bool:
     return ok
 
 
-async def run_checks() -> bool:
-    players = _representative_players(load_players())
+async def run_checks(args: argparse.Namespace) -> bool:
+    players = load_players()
+    players = _filter_players(
+        players,
+        seats=set(args.seat or []),
+        base_url_contains=args.base_url_contains or "",
+        model_contains=args.model_contains or "",
+    )
+    if not players:
+        raise ValueError("没有匹配到要检测的玩家配置，请检查 --seat/--base-url-contains/--model-contains")
+    if not args.include_duplicates:
+        players = _representative_players(players)
     print(f"将检测 {len(players)} 个不同模型/厂商配置。不会打印 API Key。")
     all_results: list[CheckResult] = []
     for player in players:
-        all_results.extend(await check_player(player))
+        all_results.extend(await check_player(player, timeout=args.timeout))
     return print_results(all_results)
 
 
-def main():
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="检查 players.json 里的模型是否适合开局")
+    parser.add_argument("--seat", type=int, action="append", help="只检测指定座位，可重复传入")
+    parser.add_argument("--base-url-contains", default="", help="只检测 base_url 包含该文本的配置")
+    parser.add_argument("--model-contains", default="", help="只检测 model_name 包含该文本的配置")
+    parser.add_argument("--timeout", type=float, default=45.0, help="每个测试阶段的超时时间，默认 45 秒")
+    parser.add_argument("--include-duplicates", action="store_true", help="检测重复模型配置；默认只检测代表项")
+    parser.add_argument("--check-models", action="store_true", help=argparse.SUPPRESS)
+    args, _unknown = parser.parse_known_args(argv)
+    return args
+
+
+def main(argv: list[str] | None = None):
+    args = parse_args(argv)
     try:
-        ok = asyncio.run(run_checks())
+        ok = asyncio.run(run_checks(args))
     except Exception as exc:
         print(f"[FAIL] 无法开始模型自检：{_short_error(exc)}")
         print("建议：先运行配置向导，确认 players.json 已生成且没有占位符。")

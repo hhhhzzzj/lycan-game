@@ -13,7 +13,7 @@ Get the game running with the least user input. Ask the user only for their LLM 
 3. Extract it.
 4. Run `start.bat`.
 5. When the setup wizard asks, paste the user's API Key.
-6. If this is a new provider/model, run `check_models.bat` before starting a real game.
+6. If this is a new provider/model, run `ping_model.bat` before starting a real game.
 7. Open `http://localhost:8000` if the browser did not open automatically.
 
 The release package does not require Python or Node.js.
@@ -26,7 +26,7 @@ Use this path only when there is no release zip.
 git clone <repo-url>
 cd lycan-game
 python scripts/configure_players.py
-python scripts/check_models.py
+python scripts/ping_model.py --seat 1 --timeout 20
 cd backend
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
