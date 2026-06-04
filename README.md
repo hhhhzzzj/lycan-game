@@ -1,106 +1,98 @@
-# AI 狼人杀（lycan-game）
+# lycan-game
 
-一款 AI 驱动的 6 人狼人杀全栈游戏。每个玩家由不同的大语言模型（LLM）扮演，通过 WebSocket 实时推送游戏状态到前端，支持逐步观战和 AI 推理过程可视化。
+AI 驱动的 6 人狼人杀实验场。每个座位由一个大语言模型扮演，后端负责规则、状态推进和模型调用，前端实时展示发言、投票、夜晚行动和推理过程。
 
-## 技术栈
+这个项目的目标不是做一个复杂难装的技术 Demo，而是让普通用户拿到仓库链接后，可以在 AI 助手帮助下完成下载、填 API Key、启动并开局。
 
-### 后端
-- **Python 3.11+** + **FastAPI** — REST API 与 WebSocket 实时通信
-- **OpenAI / Anthropic / Google Gemini** — 多模型 LLM 适配器（统一 OpenAI-compatible 接口）
-- **Uvicorn** — ASGI 服务器
-- **Pytest** — 单元测试与集成测试
+## 亮点
 
-### 前端
-- **React 19** + **TypeScript** — 类型安全的 UI 框架
-- **Vite 8** — 极速构建工具
-- **Tailwind CSS 4** — 原子化样式
-- **Framer Motion** — 流畅动画
-- **Playwright** — E2E 测试
+- **6 人标准局**：2 狼人、1 预言家、1 女巫、2 平民。
+- **多模型同局**：支持 DeepSeek、MiniMax、小米 Mimo、火山方舟等 OpenAI-compatible 接口。
+- **实时观战**：WebSocket 推送游戏状态，前端同步展示角色、发言、投票和事件流。
+- **信息隔离**：每个 AI 只拿到自己视角的信息，狼人、预言家、女巫各有不同上下文。
+- **小白友好**：Release 包可做到不安装 Python、不安装 Node.js，只填 API Key。
+- **低成本连通性检查**：默认按厂商/base_url 去重，每家只 ping 一次，不跑完整游戏、不做深度自检。
 
-## 游戏规则
+## 最快开始
 
-标准 6 人局：
+### 给不会编程的玩家
 
-| 阵营 | 角色 | 人数 |
-|------|------|------|
-| 狼人阵营 | 狼人 | 2 |
-| 好人阵营 | 预言家 | 1 |
-| 好人阵营 | 女巫 | 1 |
-| 好人阵营 | 平民 | 2 |
+优先使用 Windows Release 包：
 
-**胜利条件：**
-- 狼人方：好人全部出局
-- 好人方：狼人全部出局
+1. 打开仓库的 GitHub Releases 页面。
+2. 下载 `lycan-game-windows.zip`。
+3. 解压后双击 `start.bat`。
+4. 按终端提示粘贴 API Key。
+5. 浏览器打开 `http://localhost:8000` 开局。
 
-## 快速开始
+Release 包内置后端可执行文件和前端构建产物，玩家机器不需要安装 Python 或 Node.js。
 
-### 给 AI 助手的入口
+重新配置 API Key：双击 `configure.bat`。
 
-如果你是让 AI 帮你安装运行，把仓库链接和这句话发给 AI：
+快速测试模型能不能连通：双击 `ping_model.bat`。
+
+### 让 AI 助手代跑
+
+把仓库链接和下面这段话发给 AI 助手：
 
 ```text
 请按仓库里的 AI_QUICKSTART.md 帮我启动 lycan-game。优先下载 Release 包；如果没有 Release，再走源码模式。需要 API Key 时在本机终端提示我输入，不要让我把 Key 发到聊天里。
 ```
 
-### 1. 克隆项目
+给 AI 助手的完整操作说明在 [AI_QUICKSTART.md](AI_QUICKSTART.md)。
 
-```bash
-git clone <repo-url>
-cd lycan-game
-```
+### 开发者源码运行
 
-## 分享给朋友玩
-
-最省事的分享方式是发一个 Windows release 包。对方不需要安装 Python 或 Node.js：
-
-1. 解压 `lycan-game-windows.zip`
-2. 双击 `start.bat`
-3. 按提示粘贴 API Key
-4. 浏览器打开 `http://localhost:8000`
-
-你自己打包 release：
+后端：
 
 ```powershell
-.\scripts\build_windows_release.ps1
-```
-
-脚本会构建前端、把后端打成单个 `lycan-game.exe`，并生成 `release\lycan-game-windows.zip`。
-
-重新配置 API Key 时，双击 release 包里的 `configure.bat`。
-接入新厂商或新模型时，先双击 `ping_model.bat` 做快速连通性测试；失败时把窗口里的失败原因发给帮你运行的 AI。
-
-## 开发运行
-
-### 1. 后端配置
-
-```bash
+git clone <repo-url>
+cd lycan-game
+python -m venv backend/.venv
+backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+python scripts\configure_players.py
+python scripts\ping_model.py --timeout 20
 cd backend
-python -m venv .venv
-.venv\Scripts\activate      # Windows
-# source .venv/bin/activate # Linux/macOS
-
-pip install -r requirements.txt
+.\.venv\Scripts\python.exe main.py
 ```
 
-复制玩家配置模板并填入 API Key：
+前端开发服务器：
 
-```bash
-cp config/players.example.json config/players.json
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
-也可以用交互式配置向导：
+源码模式下：
 
-```bash
-python ../scripts/configure_players.py
+- 后端默认地址：`http://localhost:8000`
+- 前端开发地址：`http://localhost:5173`
+- 如果已经构建过前端，也可以直接访问后端地址打开页面。
+
+## 模型配置
+
+真实配置文件是：
+
+```text
+backend/config/players.json
 ```
 
-接入新厂商或新模型后，先跑快速连通性测试：
+这个文件包含 API Key，已经被 `.gitignore` 忽略，不应该提交到仓库。
 
-```bash
-python ../scripts/ping_model.py --timeout 20
+可以从示例文件复制：
+
+```powershell
+Copy-Item backend\config\players.example.json backend\config\players.json
 ```
 
-编辑 `config/players.json`，为每位玩家配置 LLM：
+也可以运行交互式配置向导：
+
+```powershell
+python scripts\configure_players.py
+```
+
+配置格式示例：
 
 ```json
 {
@@ -117,140 +109,179 @@ python ../scripts/ping_model.py --timeout 20
 }
 ```
 
-支持的 `provider`：
-- `openai` — OpenAI GPT 系列，以及所有兼容 OpenAI API 格式的服务（DeepSeek、MiniMax 等）
-- `anthropic` — Anthropic Claude 系列
-- `google` — Google Gemini 系列
+目前推荐使用 `provider: "openai"` 接入 OpenAI-compatible 服务。只要厂商兼容 Chat Completions 格式，通常只需要改 `model_name`、`api_key` 和 `base_url`。
 
-启动后端：
+常用模板：
 
-```bash
-python main.py
+- [backend/config/players.example.json](backend/config/players.example.json)
+- [backend/config/players.deepseek-minimax-mimo.example.json](backend/config/players.deepseek-minimax-mimo.example.json)
+- [backend/config/players.volcengine.example.json](backend/config/players.volcengine.example.json)
+- [backend/config/players.volcengine-coding-plan.example.json](backend/config/players.volcengine-coding-plan.example.json)
+
+## 连通性测试
+
+接入新厂商或新 base_url 后，先运行：
+
+```powershell
+python scripts\ping_model.py --timeout 20
 ```
 
-后端默认运行在 `http://localhost:8000`。如果已经执行过前端构建，也可以直接访问这个地址打开页面。
+默认逻辑：
 
-### 2. 前端启动
+- 按 `(provider, base_url)` 去重。
+- 同一家厂商只测一个代表座位。
+- 不打印 API Key。
+- 只发送一次短请求，不跑完整游戏。
+- thinking 模型默认给 `128` 输出 token，避免因为 token 太低导致假性空回复。
 
-```bash
-cd frontend
-npm install
-npm run dev
+只测试某个座位：
+
+```powershell
+python scripts\ping_model.py --seat 3 --timeout 20
 ```
 
-前端默认运行在 `http://localhost:5173`。
+## 打包 Release
+
+在 Windows 上执行：
+
+```powershell
+.\scripts\build_windows_release.ps1
+```
+
+产物：
+
+```text
+release/lycan-game-windows.zip
+```
+
+压缩包内包含：
+
+- `lycan-game.exe`：后端可执行文件，负责 API、WebSocket 和静态前端。
+- `start.bat`：配置并启动游戏。
+- `configure.bat`：重新填写 API Key。
+- `ping_model.bat`：快速测试厂商连通性。
+- `config/players.example.json`：配置模板。
+
+## 游戏规则
+
+标准 6 人局：
+
+| 阵营 | 角色 | 人数 |
+| --- | --- | --- |
+| 狼人阵营 | 狼人 | 2 |
+| 好人阵营 | 预言家 | 1 |
+| 好人阵营 | 女巫 | 1 |
+| 好人阵营 | 平民 | 2 |
+
+胜利条件：
+
+- 狼人方：所有好人出局。
+- 好人方：所有狼人出局。
+
+流程：
+
+```text
+夜晚 -> 白天 -> 投票 -> 结算 -> 下一轮
+```
+
+夜晚顺序：
+
+1. 狼人选择击杀目标。
+2. 预言家查验一名玩家身份。
+3. 女巫决定是否使用解药或毒药。
+
+白天顺序：
+
+1. 公布死亡信息。
+2. 存活玩家依次发言。
+3. 存活玩家投票放逐。
+4. 平票时按规则重投。
+
+## 技术栈
+
+后端：
+
+- Python 3.11+
+- FastAPI
+- Uvicorn
+- OpenAI-compatible Chat Completions
+- Pytest
+
+前端：
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- Framer Motion
+- Playwright
 
 ## 项目结构
 
-```
+```text
 sand-box/
 ├── backend/
-│   ├── api/
-│   │   └── routes.py            # REST + WebSocket 路由
-│   ├── config/
-│   │   ├── game_config.py       # 游戏配置常量（角色分配、座位数）
-│   │   ├── players.example.json # 玩家配置模板
-│   │   └── players.json         # 玩家配置（含 API Key，已 gitignore）
-│   ├── game/
-│   │   ├── engine.py            # 游戏引擎（夜晚→白天→投票→结算）
-│   │   ├── state.py             # 游戏状态管理
-│   │   ├── prompt_context.py    # Prompt 上下文构建
-│   │   ├── strategy.py          # 策略建议系统
-│   │   ├── summary_logger.py    # 游戏复盘日志记录器
-│   │   ├── llm/                 # LLM 适配器层
-│   │   │   ├── adapters.py      # 统一适配器工厂
-│   │   │   └── base.py          # 适配器基类
-│   │   └── roles/               # 角色处理器（prompt 模板）
-│   │       ├── base.py
-│   │       ├── werewolf.py
-│   │       ├── prophet.py
-│   │       ├── witch.py
-│   │       └── villager.py
-│   └── main.py                  # FastAPI 应用入口
+│   ├── api/                    # REST API 与 WebSocket 路由
+│   ├── config/                 # 游戏配置与玩家模板
+│   ├── game/                   # 游戏引擎、状态、角色、LLM 适配器
+│   ├── main.py                 # FastAPI 入口
+│   └── model_ping.py           # 轻量模型连通性测试
 ├── frontend/
-│   └── src/
-│       ├── App.tsx              # 应用入口
-│       ├── components/          # UI 组件
-│       │   ├── GameLayout.tsx   # 游戏布局
-│       │   ├── MainStage.tsx    # 主舞台
-│       │   ├── PlayerPanel.tsx  # 玩家面板
-│       │   ├── DialogStream.tsx # 对话流
-│       │   ├── ActionBar.tsx    # 操作栏
-│       │   ├── WelcomePage.tsx  # 欢迎页
-│       │   └── ...
-│       ├── hooks/               # 自定义 hooks
-│       │   ├── useAutoPlay.ts   # 自动播放逻辑
-│       │   └── useEventLog.ts   # 事件日志
-│       └── styles/              # 样式文件
+│   └── src/                    # React 前端
 ├── scripts/
-│   ├── run_auto_game.py         # 自动游戏脚本（无需前端）
-│   └── run_multi_games.py       # 批量游戏脚本
-├── tests/                       # 后端测试
-└── docs/                        # 设计文档与原型
+│   ├── configure_players.py    # 交互式配置向导
+│   ├── ping_model.py           # 命令行 ping 包装
+│   └── build_windows_release.ps1
+├── tests/                      # 后端测试
+├── docs/                       # 设计文档
+└── AI_QUICKSTART.md            # 给 AI 助手的启动说明
 ```
 
-## 核心设计
-
-### 游戏流程
-
-```
-夜晚（Night）→ 白天（Day）→ 循环直到游戏结束
-```
-
-每个夜晚按顺序执行：
-1. **狼人刀人** — 狼人协商并选择击杀目标
-2. **预言家验人** — 预言家查验一名玩家身份
-3. **女巫用药** — 女巫决定是否使用解药/毒药
-
-每个白天按顺序执行：
-1. **宣布死亡** — 公布昨晚结果，死者发表遗言
-2. **发言阶段** — 存活玩家依次发言（AI 推理 + 策略建议）
-3. **投票阶段** — 存活玩家投票放逐（支持平票重投）
-
-### 信息隔离
-
-每位 AI 玩家只接收自己视角的信息（`get_player_view`），确保：
-- 狼人只知道队友身份，不知道其他角色
-- 预言家只知道自己的查验结果
-- 女巫只知道当晚谁被刀了
-
-### LLM 适配器
-
-通过统一的适配器模式支持多家 LLM 提供商，所有模型使用 OpenAI-compatible 接口格式，降低接入成本。
-
-## API 接口
+## API
 
 | 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/game/start` | 使用 players.json 配置创建并启动游戏 |
-| POST | `/game/create` | 通过请求体自定义玩家配置创建游戏 |
-| POST | `/game/{id}/start` | 启动已创建的游戏 |
-| POST | `/game/{id}/continue` | 继续游戏（交互式模式下逐步推进） |
-| GET | `/game/{id}/status` | 获取游戏状态 |
-| GET | `/games` | 列出所有活跃游戏 |
-| GET | `/game/config` | 获取玩家配置（隐藏 API Key） |
-| GET | `/models/presets` | 获取预设模型列表 |
-| GET | `/health` | 健康检查 |
-| WS | `/game/{id}/ws` | WebSocket 实时推送游戏状态 |
+| --- | --- | --- |
+| `POST` | `/game/start` | 使用本地 `players.json` 创建并启动游戏 |
+| `POST` | `/game/create` | 通过请求体自定义玩家配置创建游戏 |
+| `POST` | `/game/{id}/start` | 启动已创建的游戏 |
+| `POST` | `/game/{id}/continue` | 推进交互式游戏 |
+| `GET` | `/game/{id}/status` | 获取游戏状态 |
+| `GET` | `/games` | 列出活跃游戏 |
+| `GET` | `/game/config` | 获取玩家配置，API Key 会被隐藏 |
+| `GET` | `/models/presets` | 获取预设模型列表 |
+| `GET` | `/health` | 健康检查 |
+| `WS` | `/game/{id}/ws` | 实时推送游戏状态 |
 
 ## 测试
 
-```bash
-# 后端测试
+后端：
+
+```powershell
 cd backend
 pytest
+```
 
-# 前端 E2E 测试
+前端：
+
+```powershell
 cd frontend
 npx playwright test
 ```
 
-## 开发环境要求
+基础语法检查：
 
-- Python 3.11+
-- Node.js 18+
-- 至少一个 LLM API Key（DeepSeek、OpenAI、Anthropic 或 Google）
+```powershell
+python -m compileall backend scripts
+```
 
-## 致谢
+## 隐私与安全
 
-参考了 [AIWolfGame](https://github.com/参考项目) 的多轮评测框架设计和 [Wolfcha](https://github.com/参考项目) 的 Web 交互方案。
+- 不要提交 `backend/config/players.json`。
+- 不要提交 `backend/config/players.json.bak`、`players.json.back` 等本地备份。
+- 不要把 API Key 发到聊天窗口；让 AI 助手在本机终端里提示输入。
+- `/game/config` 返回配置时会隐藏 API Key。
+- 分享给朋友时优先发 Release 包，不要发自己填过 Key 的配置目录。
+
+## 许可证
+
+未指定。发布前请根据你的分发方式补充 License。

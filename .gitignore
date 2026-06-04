@@ -15,6 +15,9 @@ release/
 backend/build/
 backend/*.spec
 backend/config/players.json
+backend/config/players.json*
+backend/config/players copy.json
+backend/config/players.local*.json
 backend/logs/*
 !backend/logs/summary/
 
