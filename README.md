@@ -94,11 +94,10 @@ cp config/players.example.json config/players.json
 python ../scripts/configure_players.py
 ```
 
-接入新厂商或新模型后，先跑快速连通性测试；只有遇到游戏内空发言/不按格式输出时，再跑模型自检：
+接入新厂商或新模型后，先跑快速连通性测试：
 
 ```bash
-python ../scripts/ping_model.py --seat 1 --timeout 20
-python ../scripts/check_models.py --seat 1 --timeout 30
+python ../scripts/ping_model.py --timeout 20
 ```
 
 编辑 `config/players.json`，为每位玩家配置 LLM：

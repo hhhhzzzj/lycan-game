@@ -26,7 +26,7 @@ Use this path only when there is no release zip.
 git clone <repo-url>
 cd lycan-game
 python scripts/configure_players.py
-python scripts/ping_model.py --seat 1 --timeout 20
+python scripts/ping_model.py --timeout 20
 cd backend
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt

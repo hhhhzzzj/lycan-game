@@ -20,13 +20,22 @@ def load_players() -> list[dict[str, Any]]:
     return data["players"]
 
 
-def select_player(players: list[dict[str, Any]], seat: int | None) -> dict[str, Any]:
+def select_players(players: list[dict[str, Any]], seat: int | None) -> list[dict[str, Any]]:
     if seat is not None:
         for player in players:
             if player.get("seat_id") == seat:
-                return player
+                return [player]
         raise ValueError(f"players.json 里没有 {seat}号 玩家")
-    return players[0]
+
+    selected: list[dict[str, Any]] = []
+    seen_vendors = set()
+    for player in players:
+        vendor_key = (player.get("provider", "openai"), player.get("base_url") or "")
+        if vendor_key in seen_vendors:
+            continue
+        seen_vendors.add(vendor_key)
+        selected.append(player)
+    return selected
 
 
 def short_error(exc: Exception) -> str:
@@ -76,9 +85,17 @@ async def ping_player(player: dict[str, Any], timeout: float) -> bool:
     return True
 
 
+async def ping_players(players: list[dict[str, Any]], timeout: float) -> bool:
+    print(f"将按厂商/base_url 去重测试 {len(players)} 个配置。不会打印 API Key。")
+    ok = True
+    for player in players:
+        ok = await ping_player(player, timeout) and ok
+    return ok
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="快速测试指定座位模型是否能连通")
-    parser.add_argument("--seat", type=int, default=None, help="指定座位；默认测试 1 号")
+    parser = argparse.ArgumentParser(description="快速测试模型厂商是否能连通")
+    parser.add_argument("--seat", type=int, default=None, help="只测试指定座位；默认按 provider/base_url 去重，每家测一次")
     parser.add_argument("--timeout", type=float, default=20.0, help="请求超时秒数，默认 20")
     return parser.parse_args(argv)
 
@@ -86,8 +103,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None):
     args = parse_args(argv)
     try:
-        player = select_player(load_players(), args.seat)
-        ok = asyncio.run(ping_player(player, args.timeout))
+        players = select_players(load_players(), args.seat)
+        ok = asyncio.run(ping_players(players, args.timeout))
     except Exception as exc:
         print(f"[FAIL] 无法开始 ping：{short_error(exc)}")
         raise SystemExit(2)
